@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import axios from 'axios';
+import { useAuthStore } from '@/stores/auth';
 import { useRouter } from 'vue-router';
 
+const authStore = useAuthStore();
 const router = useRouter();
 const email = ref('');
 const password = ref('');
@@ -11,11 +12,7 @@ const error = ref('');
 const login = async () => {
   error.value = '';
   try {
-    const { data } = await axios.post(
-      `${import.meta.env.VITE_API_URL}/api/auth/login`,
-      { email: email.value, password: password.value }
-    );
-    localStorage.setItem('token', data.token);
+    await authStore.login(email.value, password.value);
     router.push('/');
   } catch (err: any) {
     error.value = err.response?.data || 'Login failed';

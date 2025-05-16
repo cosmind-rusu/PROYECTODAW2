@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useAuthStore } from '@/stores/auth'
 import { RouterLink } from 'vue-router'
+import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
 
 const authStore = useAuthStore()
 const logout = () => authStore.logout()
@@ -15,6 +16,7 @@ const logout = () => authStore.logout()
       <RouterLink v-if="!authStore.isAuthenticated" class="header__nav__link" to="/login">Login</RouterLink>
       <RouterLink v-if="!authStore.isAuthenticated" class="header__nav__link" to="/register">Register</RouterLink>
       <button v-if="authStore.isAuthenticated" class="header__nav__logout" @click="logout">Logout</button>
+      <LanguageSwitcher />
     </nav>
   </header>
 </template>
@@ -54,6 +56,9 @@ const logout = () => authStore.logout()
       color: white;
       cursor: pointer;
       font-size: 1rem;
+    }
+    & > component[is=LanguageSwitcher] {
+      margin-left: $spacing-unit;
     }
   }
 }

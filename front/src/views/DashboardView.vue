@@ -1,87 +1,45 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import axios from 'axios';
+import axios from 'axios'
+import { useAuthStore } from '@/stores/auth'
 
-const categories = ref<any[]>([]);
-const transactions = ref<any[]>([]);
-
-const fetchData = async () => {
+// Crear categoría con prompt usando authHeader del store
+const createCategory = async () => {
+  const name = prompt('Name?')
+  if (!name) return
   try {
-    const resCat = await axios.get('/api/categories');
-    categories.value = resCat.data;
-    const resTxn = await axios.get('/api/transactions');
-    transactions.value = resTxn.data;
+    const config = useAuthStore().authHeader
+    const { data } = await axios.post('/api/categories', { name, description: '', isActive: true }, config)
+    alert(`Category created: ${data.name}`)
   } catch (err) {
-    console.error(err);
+    console.error(err)
+    alert('Error creating category')
   }
-};
-
-onMounted(fetchData);
+}
 </script>
 
 <template>
   <main class="dashboard">
     <h2>Dashboard</h2>
-    <section class="stats">
-      <div class="stat-card">
-        <h3>Categories</h3>
-        <p>{{ categories.length }}</p>
-      </div>
-      <div class="stat-card">
-        <h3>Transactions</h3>
-        <p>{{ transactions.length }}</p>
-      </div>
-    </section>
-    <section class="lists">
-      <div class="list categories-list">
-        <h4>Categories</h4>
-        <ul>
-          <li v-for="cat in categories" :key="cat.id">{{ cat.name }}</li>
-        </ul>
-      </div>
-      <div class="list transactions-list">
-        <h4>Transactions</h4>
-        <ul>
-          <li v-for="tx in transactions" :key="tx.id">
-            {{ tx.description }} - {{ tx.amount }}
-          </li>
-        </ul>
-      </div>
-    </section>
+    <button class="dashboard__btn" @click="createCategory">Create Category</button>
   </main>
 </template>
 
 <style scoped lang="scss">
+@use "@/assets/styles/variables";
+@use "@/assets/styles/mixins";
+
 .dashboard {
-  padding: 1rem;
-  .stats {
-    display: flex;
-    gap: 1rem;
-    .stat-card {
-      padding: 1rem;
-      background: #f5f5f5;
-      border-radius: 4px;
-      flex: 1;
-      text-align: center;
-    }
-  }
-  .lists {
-    display: flex;
-    gap: 2rem;
-    margin-top: 2rem;
-    .list {
-      flex: 1;
-      h4 {
-        margin-bottom: 0.5rem;
-      }
-      ul {
-        list-style: none;
-        padding: 0;
-        li {
-          padding: 0.25rem 0;
-          border-bottom: 1px solid #ddd;
-        }
-      }
+  padding: $spacing-unit;
+  &__btn {
+    margin-top: $spacing-unit;
+    padding: ($spacing-unit / 2) $spacing-unit;
+    background-color: $primary-color;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    &:hover {
+      background-color: $secondary-color;
     }
   }
 }

@@ -1,0 +1,28 @@
+{
+  "appName": "Finanzas App",
+  "dashboard": "Dashboard",
+  "about": "About",
+  "login": {
+    "title": "Login",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Login",
+    "error": "Login failed"
+  },
+  "register": {
+    "title": "Register",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "submit": "Register",
+    "error": "Registration failed"
+  },
+  "logout": "Logout",
+  "categories": "Categories",
+  "transactions": "Transactions",
+  "stats": {
+    "categories": "Categories",
+    "transactions": "Transactions"
+  },
+  "noData": "No data"
+}

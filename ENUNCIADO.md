@@ -7,93 +7,59 @@ Se desarrollará una aplicación web y una API que permitan gestionar informaci�
 
 ## 📌 Requisitos Obligatorios (1 punto cada uno)
 
-### ✅ Funcionalidad API
-- Diseñar e implementar una **API RESTful** completa.
-- Uso correcto de métodos HTTP (`GET`, `POST`, `PUT`, `DELETE`).
-- Devolver **códigos de estado HTTP** adecuados.
+### ✅ Funcionalidad (API)
+- Diseña e implementa una API con una **correcta arquitectura RESTful**.
+- Implementa métodos HTTP para las operaciones **CRUD** (Crear, Leer, Actualizar, Eliminar).
+- Asegura que la API devuelva **códigos de estado HTTP** adecuados.
 
-### ✅ Funcionalidad Web
-- Implementar una interfaz web con **Vue 2**.
-- Utilizar **vue-router** para crear rutas.
-- Mostrar información de **al menos 2 entidades** en **páginas separadas**.
+### ✅ Funcionalidad (Web)
+- La aplicación web debe listar el contenido de, al menos, **dos clases** del modelo de datos en **dos páginas diferentes**.
+- La aplicación debe ser desarrollada en **Vue 3**.
+- Utiliza **vue-router** para la configuración de las rutas de la aplicación.
 
 ### ✅ Despliegue
-- Desplegar la aplicación web en la nube, usando **AWS** (por ejemplo, EC2 o S3).
+- Despliega la aplicación web en la **nube de AWS**.
 
 ### ✅ DevOps
-- Contenerizar la API y la base de datos con **Docker**.
-- Integrar todo en el entorno de desarrollo local.
+- Orquesta mediante contenedores la aplicación, incluyendo **web**, **API** y **base de datos**.
 
 ### ✅ Diseño
-- Maquetación con **Sass**.
-- Uso de **al menos un mixin**.
-- Explicar la **paleta de colores**, **tipografías** y **espaciado** utilizados.
+- Realiza la maquetación del sitio usando **Sass**, con al menos un **mixin**.
+- Explica la elección de **colores**, **fuentes** y **espaciado** del sitio web.
 
 ---
 
 ## ✨ Funcionalidades Adicionales (1 punto cada una)
 
 ### 🔍 Funcionalidad I
-- Búsqueda y filtrado de resultados por al menos un campo.
-- Ordenación de los resultados.
+- Añade funcionalidades de **búsqueda** que permitan filtrar y ordenar los resultados por, al menos, un campo.
 
 ### 📝 Funcionalidad II
-- Formulario para registrar nueva información.
-- Eliminar información existente desde la interfaz web.
+- Amplía la aplicación web para que sea posible **registrar información** (mediante formularios) y **eliminar** la existente.
 
-### 📐 API Avanzada
-- Aplicación de buenas prácticas: arquitectura por capas, inyección de dependencias.
+### 🔐 Funcionalidad III
+- Implementa **autenticación mediante JWT** con protección por **roles**.
 
-### 🌐 Web Avanzada
-- Uso de **Vuex** para la gestión centralizada del estado.
+### 🗂️ Funcionalidad IV
+- Permite la **subida y gestión de archivos** (como imágenes o documentos) desde la aplicación.
 
-### 🗄️ Despliegue Avanzado
-- Uso de **AWS RDS** para mover la base de datos a un entorno administrado.
-- El código se aloja en **AWS EC2**.
+### 🌐 Funcionalidad (API)
+- **Integra datos de otras APIs externas** en tu aplicación.
 
-### 🔧 DevOps I
-- Crear y conectar la base de datos en la nube de AWS.
+### 💻 Funcionalidad (Web)
+- Utiliza **Vuex** o **Pinia** para la **gestión centralizada del estado** de la aplicación.
 
-### 🔧 DevOps II
-- Orquestación de contenedores en entorno local usando:
-  - Docker Compose
-  - Docker Swarm
-  - Kubernetes
+### 🛠️ Despliegue
+- **Cambia la arquitectura** de la base de datos local y usa el servicio **AWS RDS** para que la base de datos esté en el servicio administrado de base de datos de AWS y tu código en la instancia de **EC2**.
 
-### 🔧 DevOps III
-- Configurar dos entornos de trabajo locales:
-  - **PRE**
-  - **PRO**
+### 🛠️ DevOps
+- **Configura dos entornos de trabajo** en local y en la nube para trabajar el proyecto simultáneamente: **PRE** y **PRO**.
 
-### 🔧 DevOps IV
-- Despliegue completo del proyecto con **CI/CD** en la nube de AWS.
-- (Se puede usar una base de datos en memoria si no se dispone de RDS).
+### 🎨 Diseño
+- **Crea wireframes** con estilo **sketchy** utilizando **Figma** antes de empezar el desarrollo.
 
----
+### 🧪 Test
+- Crea una **colección de Postman/Hoppscotch** con peticiones HTTP de ejemplo para probar la aplicación.
 
-## 🎨 Diseño Avanzado
-
-### 🧱 Diseño I
-- Creación de **wireframes** con Figma (estilo sketchy).
-
-### 📈 Diseño II
-- Integrar **Google Analytics** y **Google Tag Manager**.
-- Medir al menos:
-  - PageView
-  - Interacción con menú
-  - Scroll
-
-### 🔁 Diseño III
-- Implementar un **test A/B** (libre pero justificado).
-
----
-
-## 🧪 Testing
-
-- Crear una **colección de Postman** con peticiones para probar la API.
-
----
-
-## 🌍 Internacionalización
-
-- Traducir **todos los textos** de la aplicación web al **inglés**.
+### 🌍 Inglés
+- **Traduce todos los textos** de la aplicación web al **inglés** para que se muestre completamente en inglés.

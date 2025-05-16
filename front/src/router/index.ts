@@ -2,7 +2,6 @@ import { createRouter, createWebHistory } from 'vue-router'
 import DashboardView from '../views/DashboardView.vue'
 import LoginView from '../views/LoginView.vue'
 import RegisterView from '../views/RegisterView.vue'
-import AnimalSpeciesView from '../views/AnimalSpeciesView.vue'
 import { useAuthStore } from '@/stores/auth'
 
 const router = createRouter({
@@ -15,27 +14,27 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
-      path: '/categories',
-      name: 'animalspecies',
-      component: AnimalSpeciesView,
+      path: '/especies',
+      name: 'especies',
+      component: () => import('../views/EspeciesView.vue'),
       meta: { requiresAuth: true },
     },
     {
-      path: '/consultations',
-      name: 'consultations',
-      component: () => import('../views/ConsultationsView.vue'),
+      path: '/consultas',
+      name: 'consultas',
+      component: () => import('../views/ConsultasView.vue'),
       meta: { requiresAuth: true },
     },
     {
-      path: '/treatments',
-      name: 'treatments',
-      component: () => import('../views/ExpenseCategoriesView.vue'), // Reutilizamos temporalmente
+      path: '/tratamientos',
+      name: 'tratamientos',
+      component: () => import('../views/TratamientosView.vue'),
       meta: { requiresAuth: true },
     },
     {
-      path: '/healthplans',
-      name: 'healthplans',
-      component: () => import('../views/BudgetsView.vue'), // Reutilizamos temporalmente
+      path: '/planes',
+      name: 'planes',
+      component: () => import('../views/PlanesView.vue'),
       meta: { requiresAuth: true },
     },
     {
@@ -45,19 +44,27 @@ const router = createRouter({
       meta: { guest: true },
     },
     {
-      path: '/register',
-      name: 'register',
+      path: '/registro',
+      name: 'registro',
       component: RegisterView,
       meta: { guest: true },
     },
   ],
 })
 
-// Route guard for auth
+// Guardia de rutas para autenticación
 router.beforeEach((to, from) => {
   const authStore = useAuthStore()
-  if (to.meta.requiresAuth && !authStore.isAuthenticated) return { name: 'login' }
-  if (to.meta.guest && authStore.isAuthenticated) return { name: 'dashboard' }
+  
+  // Verificar autenticación para rutas protegidas
+  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+    return { name: 'login' }
+  }
+  
+  // Redirigir usuarios autenticados lejos de páginas de invitado
+  if (to.meta.guest && authStore.isAuthenticated) {
+    return { name: 'dashboard' }
+  }
 })
 
 export default router

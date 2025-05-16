@@ -14,7 +14,7 @@ using Microsoft.IdentityModel.Tokens;
 namespace back.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/auth")]
     public class AuthController : ControllerBase
     {
         private readonly UserManager<IdentityUser> _userManager;
@@ -26,33 +26,34 @@ namespace back.Controllers
             _configuration = configuration;
         }
 
-        [HttpPost("register")]
+        [HttpPost("registro")]
         [AllowAnonymous]
-        public async Task<IActionResult> Register(RegisterDto model)
+        public async Task<IActionResult> Registro(RegistroDto model)
         {
-            var userExists = await _userManager.FindByEmailAsync(model.Email);
-            if (userExists != null)
-                return StatusCode(409, "User already exists!");
+            var usuarioExiste = await _userManager.FindByEmailAsync(model.Email);
+            if (usuarioExiste != null)
+                return StatusCode(409, new { Mensaje = "El usuario ya existe" });
 
-            var user = new IdentityUser { UserName = model.Email, Email = model.Email };
-            var result = await _userManager.CreateAsync(user, model.Password);
-            if (!result.Succeeded)
-                return BadRequest(result.Errors);
+            var usuario = new IdentityUser { UserName = model.Email, Email = model.Email };
+            var resultado = await _userManager.CreateAsync(usuario, model.Password);
+            
+            if (!resultado.Succeeded)
+                return BadRequest(new { Errores = resultado.Errors });
 
-            return Ok(new { Message = "User created successfully!" });
+            return Ok(new { Mensaje = "Usuario creado exitosamente" });
         }
 
         [HttpPost("login")]
         [AllowAnonymous]
         public async Task<IActionResult> Login(LoginDto model)
         {
-            var user = await _userManager.FindByEmailAsync(model.Email);
-            if (user != null && await _userManager.CheckPasswordAsync(user, model.Password))
+            var usuario = await _userManager.FindByEmailAsync(model.Email);
+            if (usuario != null && await _userManager.CheckPasswordAsync(usuario, model.Password))
             {
                 var authClaims = new List<Claim>
                 {
-                    new Claim(ClaimTypes.NameIdentifier, user.Id),
-                    new Claim(ClaimTypes.Email, user.Email),
+                    new Claim(ClaimTypes.NameIdentifier, usuario.Id),
+                    new Claim(ClaimTypes.Email, usuario.Email),
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
                 };
 
@@ -69,10 +70,10 @@ namespace back.Controllers
                 return Ok(new
                 {
                     token = new JwtSecurityTokenHandler().WriteToken(token),
-                    expiration = token.ValidTo
+                    expiracion = token.ValidTo
                 });
             }
-            return Unauthorized();
+            return Unauthorized(new { Mensaje = "Credenciales inválidas" });
         }
     }
 }

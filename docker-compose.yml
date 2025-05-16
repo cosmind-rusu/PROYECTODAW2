@@ -17,9 +17,11 @@ services:
   frontend:
     build:
       context: ./front
-      dockerfile: Dockerfile  # Dockerfile del frontend que termina en Caddy
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE: http://localhost:5000/api
     ports:
-      - "8080:80"  # punto de entrada único para todo (frontend + proxy /api)
+      - "8080:80"  # puerto para la aplicación web con proxy para /api
     depends_on:
       - backend
 
@@ -33,7 +35,7 @@ services:
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=veterinarydb
+      - POSTGRES_DB=veterinariadb
     ports:
       - "5432:5432"
     volumes:

@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import axios from 'axios'
-import { useAuthStore } from '@/stores/auth'
 import { ref, onMounted } from 'vue'
+import { useAuthStore } from '@/stores/auth'
+import { useDashboardStore } from '@/stores/dashboard'
+import apiService from '@/api/services'
 
 // Estado para el dashboard
 const stats = ref({
@@ -12,35 +13,52 @@ const stats = ref({
 })
 
 const recentConsultations = ref([])
+const loading = ref(false)
+const error = ref(null)
+
+// Usar el store del dashboard
+const dashboardStore = useDashboardStore()
+const authStore = useAuthStore()
 
 // Cargar datos del dashboard
 onMounted(async () => {
+  console.log('Dashboard: Component mounted, loading data')
   await loadDashboardData()
 })
 
 // Cargar datos del dashboard
 async function loadDashboardData() {
+  loading.value = true
+  error.value = null
+  
   try {
-    const config = useAuthStore().authHeader
+    console.log('Dashboard: Starting data load with auth status:', authStore.isAuthenticated)
     
-    // Cargar consultas recientes (últimas 5)
-    const { data: consultations } = await axios.get('/api/consultations', config)
+    // Usar nuestro servicio API personalizado
+    const consultations = await apiService.getConsultations()
+    
+    // Mostrar las últimas 5 consultas
     recentConsultations.value = consultations.slice(0, 5)
     
-    // Simulamos estadísticas básicas
+    // Calculamos estadísticas básicas
     stats.value = {
       totalPets: consultations.length,
-      todayAppointments: consultations.filter(c => {
+      todayAppointments: consultations.filter((c: any) => {
         const today = new Date().toISOString().split('T')[0]
-        return c.consultationDate.startsWith(today)
+        return c.consultationDate?.startsWith(today) || false
       }).length,
-      pendingAppointments: consultations.filter(c => 
+      pendingAppointments: consultations.filter((c: any) => 
         c.followUpDate && new Date(c.followUpDate) >= new Date()
       ).length,
-      treatments: [...new Set(consultations.map(c => c.treatmentId))].length
+      treatments: [...new Set(consultations.map((c: any) => c.treatmentId))].length
     }
-  } catch (err) {
-    console.error('Error loading dashboard data:', err)
+    
+    console.log('Dashboard: Data loaded successfully')
+  } catch (err: any) {
+    console.error('Dashboard: Error loading data:', err)
+    error.value = err?.message || 'Error al cargar los datos'
+  } finally {
+    loading.value = false
   }
 }
 
@@ -49,22 +67,20 @@ const createAnimalSpecies = async () => {
   const name = prompt('Animal Species Name? (e.g. Dog, Cat, Bird)')
   if (!name) return
   
-  const description = prompt('Description of the species?') || ''
-  
   try {
-    const config = useAuthStore().authHeader
-    const { data } = await axios.post('/api/animalspecies', { 
-      name, 
-      description, 
-      isActive: true,
-      commonIssues: '',
-      careInstructions: ''
-    }, config)
-    
-    alert(`Animal Species registered: ${data.name}`)
-  } catch (err) {
-    console.error(err)
-    alert('Error registering animal species')
+    console.log('Dashboard: Creating new animal species:', name)
+    const result = await apiService.createAnimalSpecies({
+      name,
+      description: `Common ${name} species`,
+      careInstructions: 'Standard care instructions', 
+      isActive: true
+    })
+    alert(`Animal Species registered: ${name}`)
+    // Recargar datos del dashboard
+    await loadDashboardData()
+  } catch(err) {
+    console.error('Error creating animal species:', err)
+    alert(`Failed to add ${name}`)
   }
 }
 

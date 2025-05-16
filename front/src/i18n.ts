@@ -3,7 +3,7 @@ import en from './en.json'
 
 // Traducciones para español
 const es = {
-  appName: "Finanzas App",
+  appName: "VetClinic",
   dashboard: "Dashboard",
   about: "About",
   login: {

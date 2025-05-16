@@ -1,22 +1,11 @@
 <script setup lang="ts">
-import { RouterLink, RouterView } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
-
-const authStore = useAuthStore()
-const logout = () => authStore.logout()
+import { RouterView } from 'vue-router'
+import Navbar from './components/Navbar.vue'
+// Navbar maneja enlaces y logout
 </script>
 
 <template>
-  <header>
-    <img alt="Vue logo" class="logo" src="@/assets/logo.svg" width="125" height="125" />
-    <nav>
-      <RouterLink v-if="authStore.isAuthenticated" to="/">Dashboard</RouterLink>
-      <RouterLink v-if="authStore.isAuthenticated" to="/about">About</RouterLink>
-      <RouterLink v-if="!authStore.isAuthenticated" to="/login">Login</RouterLink>
-      <RouterLink v-if="!authStore.isAuthenticated" to="/register">Register</RouterLink>
-      <button v-if="authStore.isAuthenticated" @click="logout">Logout</button>
-    </nav>
-  </header>
+  <Navbar />
 
   <RouterView />
 </template>

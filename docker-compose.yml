@@ -14,7 +14,7 @@ services:
       db:
         condition: service_healthy
 
-  caddy:
+  frontend:
     build:
       context: ./front
       dockerfile: Dockerfile  # Dockerfile del frontend que termina en Caddy

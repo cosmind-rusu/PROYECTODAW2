@@ -1,21 +1,15 @@
-# Etapa de build con Node
-FROM node:18 AS builder
+# Stage 1: Build
+FROM node:18 as builder
 WORKDIR /app
-
-# Instalar dependencias
 COPY package*.json ./
 RUN npm install
-
-# Instalar versiones exactas conocidas por ser compatibles
-RUN npm install vue@3.3.4 @vitejs/plugin-vue@4.3.0 vite@4.4.9 sass@1.32.13 --save-exact
-
-# Copiar código fuente
 COPY . .
+# Build without type checking to avoid TypeScript errors
+RUN npm run build-only
 
-# Construir la aplicación sin type-checking
-RUN node_modules/.bin/vite build --mode production
-
-# Etapa final con Caddy
-FROM caddy:2-alpine
-COPY --from=builder /app/dist /usr/share/caddy
-COPY Caddyfile /etc/caddy/Caddyfile
+# Stage 2: Production
+FROM nginx:alpine
+COPY --from=builder /app/dist /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]

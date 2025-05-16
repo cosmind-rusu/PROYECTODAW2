@@ -1,0 +1,14 @@
+// Mixins
+
+@mixin center-flex {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+@mixin card($padding: $spacing-unit, $bg: #fff) {
+  padding: $padding;
+  background-color: $bg;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}

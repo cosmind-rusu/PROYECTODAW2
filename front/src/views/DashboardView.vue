@@ -25,8 +25,8 @@ const createCategory = async () => {
 </template>
 
 <style scoped lang="scss">
-@use "@/assets/styles/variables";
-@use "@/assets/styles/mixins";
+@use "@/assets/styles/variables" as *;
+@use "@/assets/styles/mixins" as *;
 
 .dashboard {
   padding: $spacing-unit;

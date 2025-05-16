@@ -1,0 +1,67 @@
+{
+  "info": {
+    "name": "Finanzas API",
+    "_postman_id": "b1234567-c89d-12ef-3456-abcdef789012",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth - Register",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "url": { "raw": "{{baseUrl}}/api/auth/register", "host": ["{{baseUrl}}"], "path": ["api","auth","register"] },
+        "body": { "mode": "raw", "raw": "{\"email\": \"user1@example.com\", \"password\": \"Password123!\"}" }
+      }
+    },
+    {
+      "name": "Auth - Login",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api","auth","login"] },
+        "body": { "mode": "raw", "raw": "{\"email\": \"user1@example.com\", \"password\": \"Password123!\"}" }
+      }
+    },
+    {
+      "name": "Categories - Get All",
+      "request": {
+        "method": "GET",
+        "url": { "raw": "{{baseUrl}}/api/categories", "host": ["{{baseUrl}}"], "path": ["api","categories"] },
+        "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{token}}", "type": "string" } ] }
+      }
+    },
+    {
+      "name": "Categories - Create",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "url": { "raw": "{{baseUrl}}/api/categories", "host": ["{{baseUrl}}"], "path": ["api","categories"] },
+        "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{token}}", "type": "string" } ] },
+        "body": { "mode": "raw", "raw": "{\"name\": \"Food\", \"description\": \"Groceries\", \"isActive\": true, \"createdDate\": \"2025-05-16T00:00:00Z\"}" }
+      }
+    },
+    {
+      "name": "Transactions - Get All",
+      "request": {
+        "method": "GET",
+        "url": { "raw": "{{baseUrl}}/api/transactions", "host": ["{{baseUrl}}"], "path": ["api","transactions"] },
+        "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{token}}", "type": "string" } ] }
+      }
+    },
+    {
+      "name": "Transactions - Create",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "url": { "raw": "{{baseUrl}}/api/transactions", "host": ["{{baseUrl}}"], "path": ["api","transactions"] },
+        "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{token}}", "type": "string" } ] },
+        "body": { "mode": "raw", "raw": "{\"categoryId\": 1, \"amount\": 50.75, \"description\": \"Dinner\", \"transactionDate\": \"2025-05-16T20:00:00Z\", \"isExpense\": true}" }
+      }
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000" },
+    { "key": "token", "value": "" }
+  ]
+}

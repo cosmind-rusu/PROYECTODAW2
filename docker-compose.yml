@@ -1,4 +1,5 @@
 version: '3.8'
+
 services:
   backend:
     build:
@@ -10,14 +11,15 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - FRONT_URL=http://localhost:8080
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
   frontend:
     build:
       context: ./front
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile  # Dockerfile del frontend que termina en Caddy
     ports:
-      - "8080:80"
+      - "8080:80"  # punto de entrada único para todo (frontend + proxy /api)
     depends_on:
       - backend
 
@@ -31,7 +33,7 @@ services:
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=finanzasdb
+      - POSTGRES_DB=veterinarydb
     ports:
       - "5432:5432"
     volumes:

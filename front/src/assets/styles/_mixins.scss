@@ -1,4 +1,6 @@
 // Mixins
+// Nota: No importamos variables globalmente para evitar conflictos
+// cuando los componentes ya importan variables directamente
 
 @mixin center-flex {
   display: flex;
@@ -6,7 +8,7 @@
   align-items: center;
 }
 
-@mixin card($padding: $spacing-unit, $bg: #fff) {
+@mixin card($padding: 1rem, $bg: #fff) {
   padding: $padding;
   background-color: $bg;
   border-radius: 4px;

@@ -13,55 +13,55 @@ using Microsoft.AspNetCore.Authorization;
 namespace back.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/animalspecies")]
     [Authorize]
-    public class CategoriesController : ControllerBase
+    public class AnimalSpeciesController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
         private readonly IMapper _mapper;
 
-        public CategoriesController(ApplicationDbContext context, IMapper mapper)
+        public AnimalSpeciesController(ApplicationDbContext context, IMapper mapper)
         {
             _context = context;
             _mapper = mapper;
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<CategoryDto>>> Get()
+        public async Task<ActionResult<IEnumerable<AnimalSpeciesDto>>> Get()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var entities = await _context.Categories.Where(c => c.UserId == userId).ToListAsync();
-            return Ok(_mapper.Map<List<CategoryDto>>(entities));
+            var entities = await _context.AnimalSpecies.Where(c => c.UserId == userId).ToListAsync();
+            return Ok(_mapper.Map<List<AnimalSpeciesDto>>(entities));
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<CategoryDto>> Get(int id)
+        public async Task<ActionResult<AnimalSpeciesDto>> Get(int id)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var entity = await _context.Categories.FirstOrDefaultAsync(c => c.Id == id && c.UserId == userId);
+            var entity = await _context.AnimalSpecies.FirstOrDefaultAsync(c => c.Id == id && c.UserId == userId);
             if (entity == null) return NotFound();
-            return Ok(_mapper.Map<CategoryDto>(entity));
+            return Ok(_mapper.Map<AnimalSpeciesDto>(entity));
         }
 
         [HttpPost]
-        public async Task<ActionResult<CategoryDto>> Post(CategoryDto dto)
+        public async Task<ActionResult<AnimalSpeciesDto>> Post(AnimalSpeciesDto dto)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var entity = _mapper.Map<Category>(dto);
+            var entity = _mapper.Map<AnimalSpecies>(dto);
             entity.UserId = userId;
             entity.CreatedDate = System.DateTime.UtcNow;
-            _context.Categories.Add(entity);
+            _context.AnimalSpecies.Add(entity);
             await _context.SaveChangesAsync();
-            var result = _mapper.Map<CategoryDto>(entity);
+            var result = _mapper.Map<AnimalSpeciesDto>(entity);
             return CreatedAtAction(nameof(Get), new { id = entity.Id }, result);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Put(int id, CategoryDto dto)
+        public async Task<IActionResult> Put(int id, AnimalSpeciesDto dto)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (id != dto.Id) return BadRequest();
-            var entity = await _context.Categories.FirstOrDefaultAsync(c => c.Id == id && c.UserId == userId);
+            var entity = await _context.AnimalSpecies.FirstOrDefaultAsync(c => c.Id == id && c.UserId == userId);
             if (entity == null) return NotFound();
             _mapper.Map(dto, entity);
             _context.Entry(entity).State = EntityState.Modified;
@@ -73,9 +73,9 @@ namespace back.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var entity = await _context.Categories.FirstOrDefaultAsync(c => c.Id == id && c.UserId == userId);
+            var entity = await _context.AnimalSpecies.FirstOrDefaultAsync(c => c.Id == id && c.UserId == userId);
             if (entity == null) return NotFound();
-            _context.Categories.Remove(entity);
+            _context.AnimalSpecies.Remove(entity);
             await _context.SaveChangesAsync();
             return NoContent();
         }

@@ -1,5 +1,9 @@
 import axios from 'axios'
-axios.defaults.baseURL = import.meta.env.VITE_API_URL
+if (import.meta.env.DEV) {
+  axios.defaults.baseURL = import.meta.env.VITE_API_URL
+} else {
+  axios.defaults.baseURL = ''
+}
 
 import './assets/styles/main.scss'
 

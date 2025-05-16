@@ -66,14 +66,17 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-builder.Services.AddAutoMapper(typeof(Program));
+// Registrar perfiles de mapeo para AutoMapper
+builder.Services.AddAutoMapper(typeof(Program).Assembly);
+// Asegurarse de que el perfil de veterinaria se registre explícitamente
+builder.Services.AddAutoMapper(typeof(back.MappingProfiles.VeterinaryMappingProfile));
 
 builder.Services.AddControllers();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new() { Title = "Finanzas API", Version = "v1" });
+    c.SwaggerDoc("v1", new() { Title = "Veterinary Clinic API", Version = "v1" });
 });
 
 var app = builder.Build();
@@ -93,13 +96,10 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
+app.UseRouting();
 app.UseCors("AllowFrontend");
-
 app.UseAuthentication();
-
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();

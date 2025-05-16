@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import DashboardView from '../views/DashboardView.vue'
 import LoginView from '../views/LoginView.vue'
 import RegisterView from '../views/RegisterView.vue'
-import CategoriesView from '../views/CategoriesView.vue'
+import AnimalSpeciesView from '../views/AnimalSpeciesView.vue'
 import { useAuthStore } from '@/stores/auth'
 
 const router = createRouter({
@@ -15,18 +15,27 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
-      path: '/about',
-      name: 'about',
-      // route level code-splitting
-      // this generates a separate chunk (About.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
-      component: () => import('../views/AboutView.vue'),
+      path: '/categories',
+      name: 'animalspecies',
+      component: AnimalSpeciesView,
       meta: { requiresAuth: true },
     },
     {
-      path: '/categories',
-      name: 'categories',
-      component: CategoriesView,
+      path: '/consultations',
+      name: 'consultations',
+      component: () => import('../views/ConsultationsView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/treatments',
+      name: 'treatments',
+      component: () => import('../views/ExpenseCategoriesView.vue'), // Reutilizamos temporalmente
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/healthplans',
+      name: 'healthplans',
+      component: () => import('../views/BudgetsView.vue'), // Reutilizamos temporalmente
       meta: { requiresAuth: true },
     },
     {

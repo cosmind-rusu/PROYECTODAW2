@@ -71,13 +71,13 @@ body {
 
     &-input {
       margin-bottom: $spacing-unit;
-      padding: math.div($spacing-unit, 2);
+      padding: $spacing-unit / 2;
       border: 1px solid $secondary-color;
       border-radius: 4px;
     }
 
     &-button {
-      @include card(math.div($spacing-unit, 2), $primary-color);
+      @include card($spacing-unit / 2, $primary-color);
       color: white;
       border: none;
       cursor: pointer;
@@ -123,7 +123,7 @@ body {
         list-style: none;
 
         li {
-          padding: math.div($spacing-unit, 4) 0;
+          padding: $spacing-unit / 4 0;
           border-bottom: 1px solid #ddd;
         }
       }

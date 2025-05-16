@@ -13,54 +13,55 @@ using Microsoft.AspNetCore.Authorization;
 namespace back.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/treatments")]
     [Authorize]
-    public class TransactionsController : ControllerBase
+    public class TreatmentController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
         private readonly IMapper _mapper;
 
-        public TransactionsController(ApplicationDbContext context, IMapper mapper)
+        public TreatmentController(ApplicationDbContext context, IMapper mapper)
         {
             _context = context;
             _mapper = mapper;
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<TransactionDto>>> Get()
+        public async Task<ActionResult<IEnumerable<TreatmentDto>>> Get()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var entities = await _context.Transactions.Where(t => t.UserId == userId).ToListAsync();
-            return Ok(_mapper.Map<List<TransactionDto>>(entities));
+            var entities = await _context.Treatments.Where(c => c.UserId == userId).ToListAsync();
+            return Ok(_mapper.Map<List<TreatmentDto>>(entities));
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<TransactionDto>> Get(int id)
+        public async Task<ActionResult<TreatmentDto>> Get(int id)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var entity = await _context.Transactions.FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
+            var entity = await _context.Treatments.FirstOrDefaultAsync(c => c.Id == id && c.UserId == userId);
             if (entity == null) return NotFound();
-            return Ok(_mapper.Map<TransactionDto>(entity));
+            return Ok(_mapper.Map<TreatmentDto>(entity));
         }
 
         [HttpPost]
-        public async Task<ActionResult<TransactionDto>> Post(TransactionDto dto)
+        public async Task<ActionResult<TreatmentDto>> Post(TreatmentDto dto)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var entity = _mapper.Map<Transaction>(dto);
+            var entity = _mapper.Map<Treatment>(dto);
             entity.UserId = userId;
-            _context.Transactions.Add(entity);
+            entity.CreatedDate = System.DateTime.UtcNow;
+            _context.Treatments.Add(entity);
             await _context.SaveChangesAsync();
-            var result = _mapper.Map<TransactionDto>(entity);
+            var result = _mapper.Map<TreatmentDto>(entity);
             return CreatedAtAction(nameof(Get), new { id = entity.Id }, result);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Put(int id, TransactionDto dto)
+        public async Task<IActionResult> Put(int id, TreatmentDto dto)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (id != dto.Id) return BadRequest();
-            var entity = await _context.Transactions.FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
+            var entity = await _context.Treatments.FirstOrDefaultAsync(c => c.Id == id && c.UserId == userId);
             if (entity == null) return NotFound();
             _mapper.Map(dto, entity);
             _context.Entry(entity).State = EntityState.Modified;
@@ -72,9 +73,9 @@ namespace back.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var entity = await _context.Transactions.FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
+            var entity = await _context.Treatments.FirstOrDefaultAsync(c => c.Id == id && c.UserId == userId);
             if (entity == null) return NotFound();
-            _context.Transactions.Remove(entity);
+            _context.Treatments.Remove(entity);
             await _context.SaveChangesAsync();
             return NoContent();
         }

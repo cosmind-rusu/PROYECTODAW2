@@ -9,6 +9,8 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - FRONT_URL=http://localhost:8080
+    depends_on:
+      - db
 
   frontend:
     build:
@@ -21,6 +23,11 @@ services:
 
   db:
     image: postgres:15
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres

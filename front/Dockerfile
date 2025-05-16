@@ -1,6 +1,4 @@
-# Dockerfile para el frontend (Vue Vite)
-
-# Etapa de build
+# Etapa de build con Node
 FROM node:18-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
@@ -8,8 +6,8 @@ RUN npm install
 COPY . .
 RUN npm run build
 
-# Etapa de producción
-FROM nginx:stable-alpine
-COPY --from=builder /app/dist /usr/share/nginx/html
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+# Etapa final con Caddy
+FROM caddy:alpine
+COPY --from=builder /app/dist /usr/share/caddy
+# Copiar configuración de Caddy
+COPY Caddyfile /etc/caddy/Caddyfile

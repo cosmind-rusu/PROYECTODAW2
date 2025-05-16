@@ -13,6 +13,7 @@ const logout = () => authStore.logout()
     <nav class="header__nav">
       <RouterLink v-if="authStore.isAuthenticated" class="header__nav__link" to="/">Dashboard</RouterLink>
       <RouterLink v-if="authStore.isAuthenticated" class="header__nav__link" to="/about">About</RouterLink>
+      <RouterLink v-if="authStore.isAuthenticated" class="header__nav__link" to="/categories">Categories</RouterLink>
       <RouterLink v-if="!authStore.isAuthenticated" class="header__nav__link" to="/login">Login</RouterLink>
       <RouterLink v-if="!authStore.isAuthenticated" class="header__nav__link" to="/register">Register</RouterLink>
       <button v-if="authStore.isAuthenticated" class="header__nav__logout" @click="logout">Logout</button>

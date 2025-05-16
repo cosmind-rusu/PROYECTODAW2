@@ -29,6 +29,17 @@ namespace back.Data
                 .HasForeignKey(c => c.EspecieAnimalId)
                 .OnDelete(DeleteBehavior.Restrict);
                 
+            modelBuilder.Entity<EspecieAnimal>()
+                .HasOne(e => e.Usuario)
+                .WithMany()
+                .HasForeignKey(e => e.UsuarioId)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.SetNull);
+                
+            modelBuilder.Entity<EspecieAnimal>()
+                .Property(e => e.UsuarioId)
+                .IsRequired(false);
+                
             // Configuración de Tratamiento
             modelBuilder.Entity<Tratamiento>()
                 .HasMany(t => t.Consultas)

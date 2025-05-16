@@ -70,55 +70,63 @@
       </div>
     </section>
 
-    <!-- Consultas recientes -->
-    <section class="dashboard__recent">
-      <h2 class="dashboard__section-title">Consultas Recientes</h2>
+    <!-- Contenedores de datos recientes -->
+    <div class="dashboard__recent-data">
+      <!-- Especies recientes -->
+      <section class="dashboard__recent-data-section">
+        <EspeciesRecientes />
+      </section>
       
-      <div v-if="loading" class="dashboard__loading">
-        Cargando consultas recientes...
-      </div>
-      
-      <div v-else-if="error" class="dashboard__error">
-        <p>{{ error }}</p>
-        <button @click="cargarDatos" class="btn btn--primary">Reintentar</button>
-      </div>
-      
-      <div v-else-if="consultasRecientes.length === 0" class="dashboard__empty">
-        <p>No hay consultas registradas aún.</p>
-        <router-link to="/consultas" class="btn btn--primary">Crear Consulta</router-link>
-      </div>
-      
-      <table v-else class="dashboard__table">
-        <thead>
-          <tr>
-            <th>Fecha</th>
-            <th>Mascota</th>
-            <th>Especie</th>
-            <th>Tratamiento</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="consulta in consultasRecientes" :key="consulta.id">
-            <td>{{ formatoFecha(consulta.fechaConsulta) }}</td>
-            <td>{{ consulta.nombreMascota }}</td>
-            <td>{{ consulta.nombreEspecieAnimal }}</td>
-            <td>{{ consulta.nombreTratamiento }}</td>
-            <td>
-              <router-link :to="`/consultas/${consulta.id}`" class="table-action">
-                Ver Detalles
-              </router-link>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      
-      <div class="dashboard__more">
-        <router-link to="/consultas" class="btn btn--secondary">
-          Ver Todas las Consultas
-        </router-link>
-      </div>
-    </section>
+      <!-- Consultas recientes -->
+      <section class="dashboard__recent-data-section">
+        <h2 class="dashboard__section-title">Consultas Recientes</h2>
+        
+        <div v-if="loading" class="dashboard__loading">
+          Cargando consultas recientes...
+        </div>
+        
+        <div v-else-if="error" class="dashboard__error">
+          <p>{{ error }}</p>
+          <button @click="cargarDatos" class="btn btn--primary">Reintentar</button>
+        </div>
+        
+        <div v-else-if="consultasRecientes.length === 0" class="dashboard__empty">
+          <p>No hay consultas registradas aún.</p>
+          <router-link to="/consultas" class="btn btn--primary">Crear Consulta</router-link>
+        </div>
+        
+        <table v-else class="dashboard__table">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Mascota</th>
+              <th>Especie</th>
+              <th>Tratamiento</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="consulta in consultasRecientes" :key="consulta.id">
+              <td>{{ formatoFecha(consulta.fechaConsulta) }}</td>
+              <td>{{ consulta.nombreMascota }}</td>
+              <td>{{ consulta.nombreEspecieAnimal }}</td>
+              <td>{{ consulta.nombreTratamiento }}</td>
+              <td>
+                <router-link :to="`/consultas/${consulta.id}`" class="table-action">
+                  Ver Detalles
+                </router-link>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <div class="dashboard__more">
+          <router-link to="/consultas" class="btn btn--secondary">
+            Ver Todas las Consultas
+          </router-link>
+        </div>
+      </section>
+    </div>
   </div>
 </template>
 
@@ -126,6 +134,7 @@
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
 import { useAuthStore } from '@/stores/auth';
+import EspeciesRecientes from '@/components/dashboard/EspeciesRecientes.vue';
 
 // Estado del componente
 const authStore = useAuthStore();
@@ -245,12 +254,19 @@ function formatoFecha(fecha: string): string {
     margin-bottom: $spacing-unit * 2;
   }
   
-  &__recent {
+  &__recent-data {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+    gap: $spacing-unit * 2;
     margin-bottom: $spacing-unit * 2;
   }
   
-  &__loading, &__error, &__empty {
+  &__recent-data-section {
     @include card;
+    padding: $spacing-unit;
+  }
+  
+  &__loading, &__error, &__empty {
     padding: $spacing-unit * 2;
     text-align: center;
     margin-bottom: $spacing-unit;

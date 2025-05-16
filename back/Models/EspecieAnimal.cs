@@ -13,7 +13,7 @@ namespace back.Models
         public string ProblemasComunes { get; set; } = string.Empty;
         public string InstruccionesCuidado { get; set; } = string.Empty;
         public DateTime FechaCreacion { get; set; }
-        public string UsuarioId { get; set; } = null!;
+        public string? UsuarioId { get; set; }
         public IdentityUser? Usuario { get; set; }
         public ICollection<ConsultaVeterinaria>? Consultas { get; set; }
     }

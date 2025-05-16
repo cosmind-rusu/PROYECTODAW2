@@ -54,11 +54,9 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { useAuthStore } from '@/stores/auth';
+import authService from '@/services/auth-service';
 
 const router = useRouter();
-const authStore = useAuthStore();
-
 const email = ref('');
 const password = ref('');
 const error = ref('');
@@ -71,8 +69,38 @@ const handleLogin = async () => {
   loading.value = true;
   
   try {
-    await authStore.login(email.value, password.value);
-    router.push('/');
+    // Usar el servicio de autenticación directamente
+    const resultado = await authService.login(email.value, password.value);
+    console.log('Inicio de sesión exitoso:', resultado);
+    // Verificar el token guardado DESPUÉS del login
+    const tokenGuardado = window.localStorage.getItem('token');
+    console.log('Token recibido completo:', tokenGuardado ? tokenGuardado.substring(0, 30) + '...' : 'NO ENCONTRADO');
+    
+    if (!tokenGuardado) {
+      console.warn('El token no se guardó correctamente en localStorage. Intentando nuevamente...');
+      
+      // Si no se guardó, intentarlo nuevamente con el valor devuelto por el login
+      if (resultado && resultado.token) {
+        window.localStorage.setItem('token', resultado.token);
+        console.log('Token guardado manualmente:', resultado.token.substring(0, 30) + '...');
+      }
+    }
+    
+    // Verificar nuevamente después del guardado manual
+    const tokenVerificado = window.localStorage.getItem('token');
+    
+    // Mostrar los headers que se van a usar en futuras peticiones
+    console.log('Authorization header:', tokenVerificado ? `Bearer ${tokenVerificado.substring(0, 20)}...` : 'NO HAY TOKEN');
+    
+    // Esperar un momento más largo para asegurar que el token se configure
+    console.log('Esperando antes de redireccionar...');
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    console.log('Redirigiendo al dashboard...');
+    
+    // Forzar actualización de la página para asegurar que el token se aplica correctamente
+    window.location.href = '/';
+    // No usamos router.push porque podría haber problemas con la navegación programática
   } catch (err: any) {
     console.error('Error en inicio de sesión:', err);
     error.value = err.response?.data?.mensaje || 'Error al iniciar sesión. Verifica tus credenciales.';

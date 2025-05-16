@@ -55,8 +55,12 @@ export const useAuthStore = defineStore('auth', {
         const response = await api.post('/auth/login', { email, password });
         const { token, expiracion } = response.data;
         
-        this.setToken(token, expiracion);
+        // Configurar token y esperar a que se complete
+        await this.setToken(token, expiracion);
         console.log('Auth: Inicio de sesión exitoso');
+        
+        // Añadir un pequeño retraso para asegurar que todas las configuraciones se apliquen
+        await new Promise(resolve => setTimeout(resolve, 300));
         
         return true;
       } catch (error: any) {
@@ -84,7 +88,7 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    setToken(token: string, expiration?: string) {
+    async setToken(token: string, expiration?: string) {
       console.log('Auth: Configurando token', { expiration });
       
       this.token = token;
@@ -96,10 +100,11 @@ export const useAuthStore = defineStore('auth', {
         localStorage.setItem('tokenExpiration', expiration);
       }
       
+      // Esperar a que el localStorage se actualice
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       this.isAuthenticated = true;
       console.log('Auth: Token configurado en cliente HTTP');
-      
-      // No necesitamos configurar interceptores aquí porque ya están configurados en api/index.ts
     },
 
     logout() {

@@ -60,6 +60,3 @@ Se desarrollará una aplicación web y una API que permitan gestionar informaci�
 
 ### 🧪 Test
 - Crea una **colección de Postman/Hoppscotch** con peticiones HTTP de ejemplo para probar la aplicación.
-
-### 🌍 Inglés
-- **Traduce todos los textos** de la aplicación web al **inglés** para que se muestre completamente en inglés.

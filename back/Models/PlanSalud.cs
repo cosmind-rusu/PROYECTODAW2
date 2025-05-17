@@ -19,7 +19,7 @@ namespace back.Models
         public DateTime FechaInicio { get; set; }
         public DateTime FechaFin { get; set; }
         public bool Activo { get; set; }
-        public string UsuarioId { get; set; } = null!;
+        public string? UsuarioId { get; set; }
         public IdentityUser? Usuario { get; set; }
     }
 }

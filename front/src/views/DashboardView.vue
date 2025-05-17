@@ -11,7 +11,7 @@
         <div class="stat-card__icon">🐾</div>
         <div class="stat-card__content">
           <h3 class="stat-card__title">Especies</h3>
-          <p class="stat-card__number">{{ stats.totalEspecies }}</p>
+          <p class="stat-card__number">{{ stats.totalEspecies || 0 }}</p>
         </div>
       </div>
 

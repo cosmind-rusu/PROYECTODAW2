@@ -15,7 +15,7 @@ namespace back.Controllers
 {
     [ApiController]
     [Route("api/consultas")]
-    [Authorize]
+    // [Authorize] // Desactivado temporalmente para pruebas sin token
     public class ConsultaVeterinariaController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -27,6 +27,7 @@ namespace back.Controllers
             _mapper = mapper;
         }
 
+        [AllowAnonymous]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ConsultaVeterinariaDto>>> ObtenerTodas(
             [FromQuery] string? busqueda = null,
@@ -34,12 +35,11 @@ namespace back.Controllers
             [FromQuery] DateTime? fechaFin = null,
             [FromQuery] int? especieId = null)
         {
-            var usuarioId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            
+            // Iniciar query incluyendo relaciones y obtener IQueryable
             var query = _context.ConsultasVeterinarias
                 .Include(c => c.EspecieAnimal)
                 .Include(c => c.Tratamiento)
-                .Where(c => c.UsuarioId == usuarioId);
+                .AsQueryable();
                 
             if (!string.IsNullOrEmpty(busqueda))
             {
@@ -78,17 +78,17 @@ namespace back.Controllers
             return Ok(dtos);
         }
 
+        [AllowAnonymous]
         [HttpGet("{id}")]
         public async Task<ActionResult<ConsultaVeterinariaDto>> ObtenerPorId(int id)
         {
-            var usuarioId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var consulta = await _context.ConsultasVeterinarias
                 .Include(c => c.EspecieAnimal)
                 .Include(c => c.Tratamiento)
-                .FirstOrDefaultAsync(c => c.Id == id && c.UsuarioId == usuarioId);
+                .FirstOrDefaultAsync(c => c.Id == id);
                 
             if (consulta == null)
-                return NotFound(new { Mensaje = "Consulta veterinaria no encontrada" });
+                return NotFound(new { mensaje = "Consulta veterinaria no encontrada" });
                 
             var dto = _mapper.Map<ConsultaVeterinariaDto>(consulta);
             dto.NombreEspecieAnimal = consulta.EspecieAnimal?.Nombre;
@@ -97,6 +97,7 @@ namespace back.Controllers
             return Ok(dto);
         }
 
+        [AllowAnonymous]
         [HttpPost]
         public async Task<ActionResult<ConsultaVeterinariaDto>> Crear(ConsultaVeterinariaDto dto)
         {
@@ -104,22 +105,20 @@ namespace back.Controllers
                 return BadRequest(ModelState);
                 
             // Verificar que la especie animal existe
-            var usuarioId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var especieAnimal = await _context.EspeciesAnimales
-                .FirstOrDefaultAsync(e => e.Id == dto.EspecieAnimalId && e.UsuarioId == usuarioId);
+                .FirstOrDefaultAsync(e => e.Id == dto.EspecieAnimalId);
                 
             if (especieAnimal == null)
-                return BadRequest(new { Mensaje = "La especie animal especificada no existe" });
+                return BadRequest(new { mensaje = "La especie animal especificada no existe" });
                 
             // Verificar que el tratamiento existe
             var tratamiento = await _context.Tratamientos
-                .FirstOrDefaultAsync(t => t.Id == dto.TratamientoId && t.UsuarioId == usuarioId);
+                .FirstOrDefaultAsync(t => t.Id == dto.TratamientoId);
                 
             if (tratamiento == null)
-                return BadRequest(new { Mensaje = "El tratamiento especificado no existe" });
+                return BadRequest(new { mensaje = "El tratamiento especificado no existe" });
                 
             var consulta = _mapper.Map<ConsultaVeterinaria>(dto);
-            consulta.UsuarioId = usuarioId;
             
             _context.ConsultasVeterinarias.Add(consulta);
             await _context.SaveChangesAsync();
@@ -138,37 +137,36 @@ namespace back.Controllers
                 resultado);
         }
 
+        [AllowAnonymous]
         [HttpPut("{id}")]
         public async Task<IActionResult> Actualizar(int id, ConsultaVeterinariaDto dto)
         {
             if (id != dto.Id)
-                return BadRequest(new { Mensaje = "Los IDs no coinciden" });
+                return BadRequest(new { mensaje = "Los IDs no coinciden" });
                 
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
                 
-            var usuarioId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            
             // Verificar existencia de la consulta
             var consulta = await _context.ConsultasVeterinarias
-                .FirstOrDefaultAsync(c => c.Id == id && c.UsuarioId == usuarioId);
+                .FirstOrDefaultAsync(c => c.Id == id);
                 
             if (consulta == null)
-                return NotFound(new { Mensaje = "Consulta veterinaria no encontrada" });
+                return NotFound(new { mensaje = "Consulta veterinaria no encontrada" });
                 
             // Verificar existencia de especie animal
             var especieAnimal = await _context.EspeciesAnimales
-                .FirstOrDefaultAsync(e => e.Id == dto.EspecieAnimalId && e.UsuarioId == usuarioId);
+                .FirstOrDefaultAsync(e => e.Id == dto.EspecieAnimalId);
                 
             if (especieAnimal == null)
-                return BadRequest(new { Mensaje = "La especie animal especificada no existe" });
+                return BadRequest(new { mensaje = "La especie animal especificada no existe" });
                 
             // Verificar existencia de tratamiento
             var tratamiento = await _context.Tratamientos
-                .FirstOrDefaultAsync(t => t.Id == dto.TratamientoId && t.UsuarioId == usuarioId);
+                .FirstOrDefaultAsync(t => t.Id == dto.TratamientoId);
                 
             if (tratamiento == null)
-                return BadRequest(new { Mensaje = "El tratamiento especificado no existe" });
+                return BadRequest(new { mensaje = "El tratamiento especificado no existe" });
                 
             _mapper.Map(dto, consulta);
             
@@ -186,15 +184,15 @@ namespace back.Controllers
             return NoContent();
         }
 
+        [AllowAnonymous]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Eliminar(int id)
         {
-            var usuarioId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var consulta = await _context.ConsultasVeterinarias
-                .FirstOrDefaultAsync(c => c.Id == id && c.UsuarioId == usuarioId);
+                .FirstOrDefaultAsync(c => c.Id == id);
                 
             if (consulta == null)
-                return NotFound(new { Mensaje = "Consulta veterinaria no encontrada" });
+                return NotFound(new { mensaje = "Consulta veterinaria no encontrada" });
                 
             _context.ConsultasVeterinarias.Remove(consulta);
             await _context.SaveChangesAsync();

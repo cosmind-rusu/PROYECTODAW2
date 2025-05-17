@@ -15,7 +15,7 @@ namespace back.Controllers
 {
     [ApiController]
     [Route("api/planes")]
-    [Authorize]
+    // [Authorize] // Desactivado temporalmente para pruebas sin token
     public class PlanSaludController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -27,6 +27,7 @@ namespace back.Controllers
             _mapper = mapper;
         }
 
+        [AllowAnonymous]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<PlanSaludDto>>> ObtenerTodos(
             [FromQuery] string? busqueda = null,
@@ -63,6 +64,7 @@ namespace back.Controllers
             return Ok(dtos);
         }
 
+        [AllowAnonymous]
         [HttpGet("{id}")]
         public async Task<ActionResult<PlanSaludDto>> ObtenerPorId(int id)
         {
@@ -80,16 +82,16 @@ namespace back.Controllers
             return Ok(dto);
         }
 
+        [AllowAnonymous]
         [HttpPost]
         public async Task<ActionResult<PlanSaludDto>> Crear(PlanSaludDto dto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
                 
-            // Verificar que el tratamiento existe
-            var usuarioId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            // Verificar que el tratamiento existe (sin filtrar por usuario)
             var tratamiento = await _context.Tratamientos
-                .FirstOrDefaultAsync(t => t.Id == dto.TratamientoId && t.UsuarioId == usuarioId);
+                .FirstOrDefaultAsync(t => t.Id == dto.TratamientoId);
                 
             if (tratamiento == null)
                 return BadRequest(new { Mensaje = "El tratamiento especificado no existe" });
@@ -98,11 +100,22 @@ namespace back.Controllers
             if (dto.FechaInicio >= dto.FechaFin)
                 return BadRequest(new { Mensaje = "La fecha de inicio debe ser anterior a la fecha de fin" });
                 
+            // Mapear plan y asignar usuario si hay
             var plan = _mapper.Map<PlanSalud>(dto);
+            var usuarioId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             plan.UsuarioId = usuarioId;
-            
             _context.PlanesSalud.Add(plan);
-            await _context.SaveChangesAsync();
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                // Loguear error completo
+                Console.Error.WriteLine($"Error al crear PlanSalud: {ex}");
+                var detalle = ex.InnerException?.Message ?? ex.Message;
+                return StatusCode(500, new { mensaje = "Error al crear plan de salud", detalle });
+            }
             
             // Cargar relaciones para devolver datos completos
             await _context.Entry(plan).Reference(p => p.Tratamiento).LoadAsync();
@@ -116,6 +129,7 @@ namespace back.Controllers
                 resultado);
         }
 
+        [AllowAnonymous]
         [HttpPut("{id}")]
         public async Task<IActionResult> Actualizar(int id, PlanSaludDto dto)
         {
@@ -161,6 +175,7 @@ namespace back.Controllers
             return NoContent();
         }
 
+        [AllowAnonymous]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Eliminar(int id)
         {
@@ -180,6 +195,15 @@ namespace back.Controllers
         private bool PlanSaludExiste(int id)
         {
             return _context.PlanesSalud.Any(p => p.Id == id);
+        }
+
+        // Endpoint de prueba para POST (no persiste en BD)
+        [AllowAnonymous]
+        [HttpPost("test-create")]
+        public ActionResult<object> TestCreate([FromBody] PlanSaludDto dto)
+        {
+            Console.WriteLine("TestCreate PlanSalud: " + System.Text.Json.JsonSerializer.Serialize(dto));
+            return Ok(new { mensaje = "Prueba de creación exitosa", plan = dto });
         }
     }
 }

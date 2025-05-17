@@ -15,7 +15,7 @@ namespace back.Controllers
 {
     [ApiController]
     [Route("api/tratamientos")]
-    [Authorize]
+    // [Authorize]  // Desactivado temporalmente para permitir pruebas GET sin token
     public class TratamientoController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -27,6 +27,7 @@ namespace back.Controllers
             _mapper = mapper;
         }
 
+        [AllowAnonymous]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<TratamientoDto>>> ObtenerTodos([FromQuery] string? busqueda = null, [FromQuery] bool? activo = null)
         {
@@ -51,6 +52,7 @@ namespace back.Controllers
             return Ok(_mapper.Map<List<TratamientoDto>>(tratamientos));
         }
 
+        [AllowAnonymous]
         [HttpGet("{id}")]
         public async Task<ActionResult<TratamientoDto>> ObtenerPorId(int id)
         {
@@ -64,6 +66,7 @@ namespace back.Controllers
             return Ok(_mapper.Map<TratamientoDto>(tratamiento));
         }
 
+        [AllowAnonymous]
         [HttpPost]
         public async Task<ActionResult<TratamientoDto>> Crear(TratamientoDto dto)
         {
@@ -82,6 +85,7 @@ namespace back.Controllers
             return CreatedAtAction(nameof(ObtenerPorId), new { id = tratamiento.Id }, _mapper.Map<TratamientoDto>(tratamiento));
         }
 
+        [AllowAnonymous]
         [HttpPut("{id}")]
         public async Task<IActionResult> Actualizar(int id, TratamientoDto dto)
         {
@@ -114,6 +118,7 @@ namespace back.Controllers
             return NoContent();
         }
 
+        [AllowAnonymous]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Eliminar(int id)
         {

@@ -55,6 +55,7 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import authService from '@/services/auth-service';
+import { useAuthStore } from '@/stores/auth';
 
 const router = useRouter();
 const email = ref('');
@@ -69,8 +70,9 @@ const handleLogin = async () => {
   loading.value = true;
   
   try {
-    // Usar el servicio de autenticación directamente
     const resultado = await authService.login(email.value, password.value);
+    const authStore = useAuthStore();
+    authStore.setToken(resultado.token, resultado.expiracion);
     console.log('Inicio de sesión exitoso:', resultado);
     // Verificar el token guardado DESPUÉS del login
     const tokenGuardado = window.localStorage.getItem('token');

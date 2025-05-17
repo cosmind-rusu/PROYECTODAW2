@@ -53,6 +53,17 @@ namespace back.Data
                 .HasForeignKey(p => p.TratamientoId)
                 .OnDelete(DeleteBehavior.Restrict);
                 
+            modelBuilder.Entity<Tratamiento>()
+                .HasOne(t => t.Usuario)
+                .WithMany()
+                .HasForeignKey(t => t.UsuarioId)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.SetNull);
+                
+            modelBuilder.Entity<Tratamiento>()
+                .Property(t => t.UsuarioId)
+                .IsRequired(false);
+                
             // Configuración de propiedades decimales para evitar problemas con precisión
             modelBuilder.Entity<Tratamiento>()
                 .Property(t => t.CostoEstandar)
@@ -69,6 +80,16 @@ namespace back.Data
             modelBuilder.Entity<PlanSalud>()
                 .Property(p => p.PorcentajeDescuento)
                 .HasColumnType("decimal(5,2)");
+                
+            modelBuilder.Entity<PlanSalud>()
+                .HasOne(p => p.Usuario)
+                .WithMany()
+                .HasForeignKey(p => p.UsuarioId)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.SetNull);
+            modelBuilder.Entity<PlanSalud>()
+                .Property(p => p.UsuarioId)
+                .IsRequired(false);
         }
     }
 }

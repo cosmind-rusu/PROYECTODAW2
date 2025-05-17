@@ -18,7 +18,7 @@ namespace back.Models
         public string? CodigoColor { get; set; }
         public bool Activo { get; set; }
         public DateTime FechaCreacion { get; set; }
-        public string UsuarioId { get; set; } = null!;
+        public string? UsuarioId { get; set; }
         public IdentityUser? Usuario { get; set; }
         public ICollection<ConsultaVeterinaria>? Consultas { get; set; }
         public ICollection<PlanSalud>? PlanesSalud { get; set; }

@@ -1,4 +1,6 @@
 import axios from 'axios';
+import type { TratamientoDto } from '@/types/tratamientos';
+import type { PlanSaludDto } from '@/types/planes';
 
 // URL base de la API (se utiliza la variable de entorno)
 const API_URL = import.meta.env.VITE_API_BASE || 'http://localhost:5000/api';
@@ -116,6 +118,45 @@ class ApiService {
     }
   }
 
+  /**
+   * Crear un nuevo tratamiento
+   */
+  async createTratamiento(dto: TratamientoDto) {
+    try {
+      const response = await axios.post(`${API_URL}/tratamientos`, dto, this.getHeaders());
+      return response.data;
+    } catch (error) {
+      console.error('Error al crear tratamiento:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Actualizar un tratamiento existente
+   */
+  async updateTratamiento(id: number, dto: TratamientoDto) {
+    try {
+      const response = await axios.put(`${API_URL}/tratamientos/${id}`, dto, this.getHeaders());
+      return response.data;
+    } catch (error) {
+      console.error(`Error al actualizar tratamiento ${id}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Eliminar un tratamiento
+   */
+  async deleteTratamiento(id: number) {
+    try {
+      await axios.delete(`${API_URL}/tratamientos/${id}`, this.getHeaders());
+      return true;
+    } catch (error) {
+      console.error(`Error al eliminar tratamiento ${id}:`, error);
+      throw error;
+    }
+  }
+
   // ======================
   // CONSULTAS
   // ======================
@@ -135,6 +176,45 @@ class ApiService {
       return response.data;
     } catch (error) {
       console.error('Error al obtener consultas:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Crear nueva consulta
+   */
+  async createConsulta(dto: any) {
+    try {
+      const response = await axios.post(`${API_URL}/consultas`, dto, this.getHeaders());
+      return response.data;
+    } catch (error) {
+      console.error('Error al crear consulta:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Actualizar consulta existente
+   */
+  async updateConsulta(id: number, dto: any) {
+    try {
+      const response = await axios.put(`${API_URL}/consultas/${id}`, dto, this.getHeaders());
+      return response.data;
+    } catch (error) {
+      console.error(`Error al actualizar consulta ${id}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Eliminar consulta por ID
+   */
+  async deleteConsulta(id: number) {
+    try {
+      await axios.delete(`${API_URL}/consultas/${id}`, this.getHeaders());
+      return true;
+    } catch (error) {
+      console.error(`Error al eliminar consulta ${id}:`, error);
       throw error;
     }
   }
@@ -159,6 +239,45 @@ class ApiService {
     }
   }
 
+  /**
+   * Crear nuevo plan de salud
+   */
+  async createPlanSalud(dto: PlanSaludDto) {
+    try {
+      const response = await axios.post(`${API_URL}/planes`, dto, this.getHeaders());
+      return response.data;
+    } catch (error) {
+      console.error('Error al crear plan de salud:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Actualizar plan de salud existente
+   */
+  async updatePlanSalud(id: number, dto: PlanSaludDto) {
+    try {
+      const response = await axios.put(`${API_URL}/planes/${id}`, dto, this.getHeaders());
+      return response.data;
+    } catch (error) {
+      console.error(`Error al actualizar plan de salud ${id}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Eliminar plan de salud
+   */
+  async deletePlanSalud(id: number) {
+    try {
+      await axios.delete(`${API_URL}/planes/${id}`, this.getHeaders());
+      return true;
+    } catch (error) {
+      console.error(`Error al eliminar plan de salud ${id}:`, error);
+      throw error;
+    }
+  }
+
   // ======================
   // ESTADÍSTICAS (para dashboard)
   // ======================
@@ -174,4 +293,6 @@ class ApiService {
   }
 }
 
-export default new ApiService();
+// Exportar instancia
+const apiService = new ApiService();
+export default apiService;

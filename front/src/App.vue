@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router'
-import NavBar from './components/NavBar.vue'
+import Navbar from './components/Navbar.vue'
 import Footer from './components/Footer.vue'
 import { useAuthStore } from './stores/auth'
 import { onMounted, onBeforeMount, provide } from 'vue'
@@ -48,7 +48,7 @@ onMounted(() => {
 
 <template>
   <div class="app-container">
-    <NavBar />
+    <Navbar />
     <main class="app-content">
       <RouterView />
     </main>

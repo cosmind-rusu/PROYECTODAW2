@@ -183,21 +183,8 @@ async function cargarConsultasRecientes() {
 
 async function cargarEstadisticas() {
   try {
-    // Cargar conteo de especies
-    const resEspecies = await axios.get('/api/especies', authStore.authHeader);
-    stats.value.totalEspecies = resEspecies.data.length;
-    
-    // Cargar conteo de tratamientos
-    const resTratamientos = await axios.get('/api/tratamientos', authStore.authHeader);
-    stats.value.totalTratamientos = resTratamientos.data.length;
-    
-    // Cargar conteo de consultas
-    const resConsultas = await axios.get('/api/consultas', authStore.authHeader);
-    stats.value.totalConsultas = resConsultas.data.length;
-    
-    // Cargar conteo de planes de salud
-    const resPlanes = await axios.get('/api/planes', authStore.authHeader);
-    stats.value.totalPlanes = resPlanes.data.length;
+    const { data } = await axios.get('/api/dashboard/stats', authStore.authHeader);
+    stats.value = data;
   } catch (error) {
     console.error('Error cargando estadísticas:', error);
     throw error;

@@ -6,8 +6,6 @@ COPY package*.json ./
 RUN npm ci            # o npm install
     
 COPY . .
-    
-# 👉 NUEVO: inyectamos la URL de la API en Vite
 ARG VITE_API_BASE=http://localhost:5000/api
 ENV VITE_API_BASE=$VITE_API_BASE
     

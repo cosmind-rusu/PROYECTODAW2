@@ -10,7 +10,7 @@ export interface ConsultaVeterinaria {
   notasTratamiento?: string;
   prescripcion?: string;
   fechaConsulta: string;
-  fechaSeguimiento?: string;
+  // fechaSeguimiento eliminada
   nombreEspecieAnimal?: string;
   nombreTratamiento?: string;
 }
@@ -27,5 +27,5 @@ export interface ConsultaVeterinariaDto {
   notasTratamiento?: string;
   prescripcion?: string;
   fechaConsulta: string;
-  fechaSeguimiento?: string;
+  // fechaSeguimiento eliminada
 }

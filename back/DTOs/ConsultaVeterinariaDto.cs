@@ -1,5 +1,7 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
+using back.Converters;
 
 namespace back.DTOs
 {
@@ -31,14 +33,12 @@ namespace back.DTOs
         public string Descripcion { get; set; } = null!;
 
         public string NotasTratamiento { get; set; } = string.Empty;
-
         public string Prescripcion { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "La fecha de consulta es obligatoria")]
+        [JsonConverter(typeof(DateTimeConverter))]
         public DateTime FechaConsulta { get; set; }
 
-        public DateTime? FechaSeguimiento { get; set; }
-        
         // Propiedades para UI
         public string? NombreEspecieAnimal { get; set; }
         public string? NombreTratamiento { get; set; }

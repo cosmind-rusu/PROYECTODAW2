@@ -16,10 +16,8 @@ namespace back.Models
         public string NotasTratamiento { get; set; } = string.Empty;
         public string Prescripcion { get; set; } = string.Empty;
         public DateTime FechaConsulta { get; set; }
-        public DateTime? FechaSeguimiento { get; set; }
         public string UsuarioId { get; set; } = null!;
-        
-        // Relaciones de navegación
+
         public EspecieAnimal? EspecieAnimal { get; set; }
         public Tratamiento? Tratamiento { get; set; }
         public IdentityUser? Usuario { get; set; }

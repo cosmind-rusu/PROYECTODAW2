@@ -52,10 +52,6 @@
           <input id="fechaConsulta" v-model="dto.fechaConsulta" type="date" required />
           <p v-if="submitted && !dto.fechaConsulta" class="error">La fecha de consulta es obligatoria</p>
         </div>
-        <div class="form-group">
-          <label for="fechaSeguimiento">Fecha Seguimiento</label>
-          <input id="fechaSeguimiento" v-model="dto.fechaSeguimiento" type="date" />
-        </div>
       </div>
       <!-- Acciones -->
       <div class="form-actions">
@@ -83,6 +79,9 @@ const submitted = ref(false);
 const error = ref('');
 const especies = ref<EspecieAnimal[]>([]);
 const tratamientos = ref<Tratamiento[]>([]);
+
+// 🟡 Aseguramos que fechaConsulta es válida (YYYY-MM-DD) 
+const today = new Date();
 const dto = ref<ConsultaVeterinariaDto>({
   especieAnimalId: 0,
   tratamientoId: 0,
@@ -91,8 +90,9 @@ const dto = ref<ConsultaVeterinariaDto>({
   informacionContacto: '',
   costo: 0,
   descripcion: '',
-  fechaConsulta: new Date().toISOString().substr(0,10),
-  fechaSeguimiento: undefined
+  notasTratamiento: '',
+  prescripcion: '',
+  fechaConsulta: today.toISOString().split('T')[0], // "YYYY-MM-DD"
 });
 
 async function cargarListas() {
@@ -110,6 +110,7 @@ async function guardar() {
   submitted.value = true;
   loading.value = true;
   error.value = '';
+
   // Validaciones
   const errorsList: string[] = [];
   if (!dto.value.especieAnimalId) errorsList.push('Seleccione una especie');
@@ -119,9 +120,21 @@ async function guardar() {
   if (!dto.value.informacionContacto.trim()) errorsList.push('La información de contacto es obligatoria');
   if (!dto.value.descripcion.trim()) errorsList.push('La descripción es obligatoria');
   if (!dto.value.fechaConsulta) errorsList.push('La fecha de consulta es obligatoria');
-  if (errorsList.length) { error.value = errorsList.join(', '); loading.value = false; return; }
+  if (dto.value.fechaConsulta === '0001-01-01') errorsList.push('La fecha de consulta no es válida');
+
+  if (errorsList.length) {
+    error.value = errorsList.join(', ');
+    loading.value = false;
+    return;
+  }
+
   try {
-    await store.crearConsulta(dto.value);
+    const payload: ConsultaVeterinariaDto = {
+      ...dto.value,
+    };
+
+    console.log(" Enviando:", payload);
+    await store.crearConsulta(payload);
     emit('guardado');
     cerrar();
   } catch (e: any) {
@@ -135,6 +148,7 @@ function cerrar() {
   emit('cerrar');
 }
 </script>
+
 
 <style scoped>
 .consulta-form { background: #fff; padding: 1.5rem; border-radius: 8px; max-width: 700px; margin: auto; box-shadow: 0 2px 12px rgba(0,0,0,0.1); }

@@ -6,15 +6,14 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using DotNetEnv;
-using System;
 using back.Middleware;
 
-// Cargar variables de entorno
+// Cargar variables de entorno desde .env
 Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Agregar servicios al contenedor
+// Configurar DbContext con PostgreSQL
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(
         builder.Configuration.GetConnectionString("DefaultConnection"),
@@ -25,7 +24,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
         )
     ));
 
-// CORS
+// Configurar CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
@@ -76,9 +75,9 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = builder.Configuration["Jwt:Issuer"],
         ValidAudience = builder.Configuration["Jwt:Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
-        ClockSkew = TimeSpan.Zero // Eliminar el margen de 5 minutos por defecto
+        ClockSkew = TimeSpan.Zero
     };
-    
+
     options.Events = new JwtBearerEvents
     {
         OnMessageReceived = context =>
@@ -101,9 +100,10 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-// Registrar perfiles de AutoMapper
+// AutoMapper
 builder.Services.AddAutoMapper(typeof(Program).Assembly);
 
+// Swagger
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -113,19 +113,17 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-// Asegurar que la base de datos está creada
-using(var scope = app.Services.CreateScope())
+// Aplicar migraciones automáticamente y crear usuario admin si no existe
+using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    // Borrar y crear la base de datos para aplicar cambios de esquema en desarrollo
-    db.Database.EnsureDeleted();
-    db.Database.EnsureCreated();
-    
-    // Inicializar usuario administrador
+    db.Database.Migrate(); // Aplica todas las migraciones automáticamente
+
+    // Crear usuario administrador si no existe
     await InitializeAdminUser(app);
 }
 
-// Configure el pipeline de solicitud HTTP
+// Configurar pipeline HTTP
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -139,43 +137,40 @@ app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
-
 app.Run();
 
 // Método auxiliar para inicializar usuario administrador
 static async Task InitializeAdminUser(WebApplication app)
 {
-    using (var scope = app.Services.CreateScope())
+    using var scope = app.Services.CreateScope();
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
+    
+    var exists = await userManager.FindByEmailAsync("admin@veterinaria.com");
+    if (exists == null)
     {
-        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
-        var exists = await userManager.FindByEmailAsync("admin@veterinaria.com");
-        
-        if (exists == null)
+        var user = new IdentityUser
         {
-            var user = new IdentityUser 
-            { 
-                UserName = "admin@veterinaria.com", 
-                Email = "admin@veterinaria.com",
-                EmailConfirmed = true
-            };
-            
-            var result = await userManager.CreateAsync(user, "Admin123!");
-            if (result.Succeeded)
-            {
-                Console.WriteLine("Usuario administrador creado con éxito");
-            }
-            else
-            {
-                Console.WriteLine("Error al crear usuario administrador:");
-                foreach (var error in result.Errors)
-                {
-                    Console.WriteLine($"- {error.Description}");
-                }
-            }
+            UserName = "admin@veterinaria.com",
+            Email = "admin@veterinaria.com",
+            EmailConfirmed = true
+        };
+
+        var result = await userManager.CreateAsync(user, "Admin123!");
+        if (result.Succeeded)
+        {
+            Console.WriteLine("✅ Usuario administrador creado con éxito");
         }
         else
         {
-            Console.WriteLine("Usuario administrador ya existe");
+            Console.WriteLine("❌ Error al crear usuario administrador:");
+            foreach (var error in result.Errors)
+            {
+                Console.WriteLine($"- {error.Description}");
+            }
         }
+    }
+    else
+    {
+        Console.WriteLine("ℹ️ Usuario administrador ya existe");
     }
 }

@@ -184,6 +184,11 @@ class ApiService {
    * Crear nueva consulta
    */
   async createConsulta(dto: any) {
+    // Convert date fields to 'yyyy-MM-dd' format
+    dto.fechaConsulta = new Date(dto.fechaConsulta).toISOString().substring(0,10);
+    if(dto.fechaSeguimiento) {
+      dto.fechaSeguimiento = new Date(dto.fechaSeguimiento).toISOString().substring(0,10);
+    }
     try {
       const response = await axios.post(`${API_URL}/consultas`, dto, this.getHeaders());
       return response.data;

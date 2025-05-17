@@ -153,6 +153,8 @@ textarea {
   border: none;
   border-radius: 4px;
   cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  font-size: 1rem;
 }
 
 .btn-primary {
@@ -160,9 +162,29 @@ textarea {
   color: #fff;
 }
 
+.btn-primary:hover {
+  background: #0056b3;
+  transform: scale(1.02);
+}
+
 .btn-secondary {
   background: #6c757d;
   color: #fff;
+}
+
+.btn-secondary:hover {
+  background: #50575e;
+  transform: scale(1.02);
+}
+
+.btn--danger {
+  background: #dc3545;
+  color: #fff;
+}
+
+.btn--danger:hover {
+  background: #a71d2a;
+  transform: scale(1.02);
 }
 
 .error {

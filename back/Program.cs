@@ -7,13 +7,14 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using DotNetEnv;
 using System;
+using back.Middleware;
 
-// Load environment variables early
+// Cargar variables de entorno
 Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Agregar servicios al contenedor
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(
         builder.Configuration.GetConnectionString("DefaultConnection"),
@@ -29,13 +30,21 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins(builder.Configuration["FRONT_URL"])
-              .AllowAnyHeader()
-              .AllowAnyMethod();
+        var origins = builder.Configuration["FRONT_URL"]?.Split(',', StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>();
+        if (builder.Environment.IsDevelopment())
+        {
+            policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+        }
+        else
+        {
+            policy.WithOrigins(origins)
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        }
     });
 });
 
-// Configurar política de contraseñas
+// Configurar Identity
 builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
 {
     options.Password.RequireDigit = false;
@@ -47,13 +56,17 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
+// Configurar autenticación JWT
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
 })
 .AddJwtBearer(options =>
 {
+    options.SaveToken = true;
+    options.RequireHttpsMetadata = false;
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,
@@ -62,33 +75,57 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidIssuer = builder.Configuration["Jwt:Issuer"],
         ValidAudience = builder.Configuration["Jwt:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
+        ClockSkew = TimeSpan.Zero // Eliminar el margen de 5 minutos por defecto
+    };
+    
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
+            if (token != null)
+            {
+                context.Token = token;
+            }
+            return Task.CompletedTask;
+        },
+        OnAuthenticationFailed = context =>
+        {
+            if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))
+            {
+                context.Response.Headers.Add("Token-Expired", "true");
+            }
+            return Task.CompletedTask;
+        }
     };
 });
 
-// Registrar perfiles de mapeo para AutoMapper
+// Registrar perfiles de AutoMapper
 builder.Services.AddAutoMapper(typeof(Program).Assembly);
-// Asegurarse de que el perfil de veterinaria se registre explícitamente
-builder.Services.AddAutoMapper(typeof(back.MappingProfiles.VeterinaryMappingProfile));
 
 builder.Services.AddControllers();
-
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new() { Title = "Veterinary Clinic API", Version = "v1" });
+    c.SwaggerDoc("v1", new() { Title = "API Clínica Veterinaria", Version = "v1" });
 });
 
 var app = builder.Build();
 
-// Ensure database is created (Identity and schemas)
+// Asegurar que la base de datos está creada
 using(var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    // Borrar y crear la base de datos para aplicar cambios de esquema en desarrollo
+    db.Database.EnsureDeleted();
     db.Database.EnsureCreated();
+    
+    // Inicializar usuario administrador
+    await InitializeAdminUser(app);
 }
 
-// Configure the HTTP request pipeline.
+// Configure el pipeline de solicitud HTTP
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -97,9 +134,48 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseRouting();
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+// Método auxiliar para inicializar usuario administrador
+static async Task InitializeAdminUser(WebApplication app)
+{
+    using (var scope = app.Services.CreateScope())
+    {
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
+        var exists = await userManager.FindByEmailAsync("admin@veterinaria.com");
+        
+        if (exists == null)
+        {
+            var user = new IdentityUser 
+            { 
+                UserName = "admin@veterinaria.com", 
+                Email = "admin@veterinaria.com",
+                EmailConfirmed = true
+            };
+            
+            var result = await userManager.CreateAsync(user, "Admin123!");
+            if (result.Succeeded)
+            {
+                Console.WriteLine("Usuario administrador creado con éxito");
+            }
+            else
+            {
+                Console.WriteLine("Error al crear usuario administrador:");
+                foreach (var error in result.Errors)
+                {
+                    Console.WriteLine($"- {error.Description}");
+                }
+            }
+        }
+        else
+        {
+            Console.WriteLine("Usuario administrador ya existe");
+        }
+    }
+}

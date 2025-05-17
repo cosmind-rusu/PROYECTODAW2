@@ -1,91 +1,147 @@
-<script setup lang="ts">
-import { useAuthStore } from '@/stores/auth'
-import { RouterLink } from 'vue-router'
-import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
-
-const authStore = useAuthStore()
-const logout = () => authStore.logout()
-</script>
-
 <template>
-  <header class="header">
-    <div class="header__logo">
-      <span>VetClinic</span>
+  <nav class="navbar">
+    <div class="navbar__container">
+      <div class="navbar__logo">
+        <router-link to="/">
+          <h1>Clínica Veterinaria</h1>
+        </router-link>
+      </div>
+      
+      <div v-if="authStore.isAuthenticated" class="navbar__menu">
+        <router-link to="/" class="navbar__link">Dashboard</router-link>
+        <router-link to="/especies" class="navbar__link">Especies</router-link>
+        <router-link to="/tratamientos" class="navbar__link">Tratamientos</router-link>
+        <router-link to="/consultas" class="navbar__link">Consultas</router-link>
+        <router-link to="/planes" class="navbar__link">Planes de Salud</router-link>
+      </div>
+      
+      <div class="navbar__actions">
+        <template v-if="authStore.isAuthenticated">
+          <button @click="authStore.logout" class="navbar__button navbar__button--logout">
+            Cerrar Sesión
+          </button>
+        </template>
+        <template v-else>
+          <router-link to="/login" class="navbar__button">Iniciar Sesión</router-link>
+          <router-link to="/registro" class="navbar__button navbar__button--primary">Registro</router-link>
+        </template>
+      </div>
     </div>
-    <nav class="header__nav">
-      <RouterLink v-if="authStore.isAuthenticated" class="header__nav__link" to="/">Dashboard</RouterLink>
-      <RouterLink v-if="authStore.isAuthenticated" class="header__nav__link" to="/categories">Animal Species</RouterLink>
-      <RouterLink v-if="authStore.isAuthenticated" class="header__nav__link" to="/consultations">Consultations</RouterLink>
-      <RouterLink v-if="authStore.isAuthenticated" class="header__nav__link" to="/treatments">Treatments</RouterLink>
-      <RouterLink v-if="authStore.isAuthenticated" class="header__nav__link" to="/healthplans">Health Plans</RouterLink>
-      <RouterLink v-if="!authStore.isAuthenticated" class="header__nav__link" to="/login">Login</RouterLink>
-      <RouterLink v-if="!authStore.isAuthenticated" class="header__nav__link" to="/register">Register</RouterLink>
-      <button v-if="authStore.isAuthenticated" class="header__nav__logout" @click="logout">Logout</button>
-      <LanguageSwitcher />
-    </nav>
-  </header>
+  </nav>
 </template>
 
-<style scoped lang="scss">
-@import "@/assets/styles/variables";
-@import "@/assets/styles/mixins";
+<script setup lang="ts">
+import { useAuthStore } from '@/stores/auth';
 
-.header {
-  @include center-flex;
-  justify-content: space-between;
+const authStore = useAuthStore();
+</script>
+
+<style lang="scss" scoped>
+@import '@/assets/styles/variables';
+@import '@/assets/styles/mixins';
+
+.navbar {
   background-color: $primary-color;
-  padding: $spacing-unit;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-
-  &__logo {
+  color: $light-color;
+  padding: $spacing-unit 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  
+  &__container {
+    @include container;
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    font-size: 1.5rem;
-    color: white;
-    font-weight: bold;
-    
-    &-img {
-      height: 30px;
-      margin-right: $spacing-unit / 2;
+  }
+  
+  &__logo {
+    a {
+      text-decoration: none;
+      color: $light-color;
+      
+      h1 {
+        font-size: 1.5rem;
+        margin: 0;
+      }
     }
   }
-
-  &__nav {
+  
+  &__menu {
     display: flex;
     gap: $spacing-unit;
-    align-items: center;
-    flex-wrap: wrap;
+  }
+  
+  &__link {
+    color: $light-color;
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border-radius: $border-radius;
+    transition: background-color 0.3s ease;
     
-    @media (max-width: 768px) {
-      flex-direction: column;
-      align-items: flex-end;
+    &:hover, &.router-link-active {
+      background-color: rgba(255, 255, 255, 0.1);
     }
-
-    &__link {
-      color: white;
-      text-decoration: none;
-      font-weight: bold;
-      transition: color 0.2s ease;
+  }
+  
+  &__actions {
+    display: flex;
+    gap: $spacing-unit;
+  }
+  
+  &__button {
+    padding: 0.5rem 1rem;
+    border-radius: $border-radius;
+    background-color: transparent;
+    border: 1px solid $light-color;
+    color: $light-color;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    &--primary {
+      background-color: $accent-color;
+      border-color: $accent-color;
       
       &:hover {
-        color: $secondary-color;
+        background-color: darken($accent-color, 10%);
       }
+    }
+    
+    &--logout {
+      background-color: $danger-color;
+      border-color: $danger-color;
       
-      &.router-link-active {
-        color: $secondary-color;
-        border-bottom: 2px solid $secondary-color;
+      &:hover {
+        background-color: darken($danger-color, 10%);
       }
     }
+  }
+}
 
-    &__logout {
-      background: none;
-      border: none;
-      color: white;
-      cursor: pointer;
-      font-size: 1rem;
+@media (max-width: $breakpoint-md) {
+  .navbar {
+    &__container {
+      flex-direction: column;
+      align-items: flex-start;
+      padding: $spacing-unit;
     }
-    & > component[is=LanguageSwitcher] {
-      margin-left: $spacing-unit;
+    
+    &__menu {
+      margin: $spacing-unit 0;
+      flex-direction: column;
+      width: 100%;
+    }
+    
+    &__link {
+      width: 100%;
+    }
+    
+    &__actions {
+      width: 100%;
+      justify-content: flex-end;
     }
   }
 }

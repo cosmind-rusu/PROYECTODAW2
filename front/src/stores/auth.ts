@@ -1,144 +1,157 @@
 import { defineStore } from 'pinia';
-import axios from 'axios';
-import http from '@/api/http';
 import router from '@/router';
+import api from '@/api';
+
+interface UserCredentials {
+  email: string;
+  password: string;
+}
+
+interface RegisterData extends UserCredentials {
+  confirmPassword: string;
+}
+
+interface AuthState {
+  token: string;
+  isAuthenticated: boolean;
+  user: any | null;
+  tokenExpiration: Date | null;
+}
 
 export const useAuthStore = defineStore('auth', {
-  state: () => ({
+  state: (): AuthState => ({
     token: localStorage.getItem('token') || '',
     isAuthenticated: !!localStorage.getItem('token'),
-    user: null as any,
-    tokenExpiration: null as Date | null,
+    user: null,
+    tokenExpiration: localStorage.getItem('tokenExpiration') 
+      ? new Date(localStorage.getItem('tokenExpiration') as string) 
+      : null,
   }),
+
   getters: {
     authHeader: (state) => state.token ? { headers: { Authorization: `Bearer ${state.token}` } } : {},
+    
     hasValidToken: (state) => {
       if (!state.token) {
-        console.log('Auth: No token found');
+        console.log('Auth: No hay token');
         return false;
       }
+      
       if (state.tokenExpiration && new Date() > state.tokenExpiration) {
-        console.log('Auth: Token expired');
+        console.log('Auth: Token expirado');
         return false;
       }
-      console.log('Auth: Token is valid');
+      
+      console.log('Auth: Token válido');
       return true;
     }
   },
+
   actions: {
     async login(email: string, password: string) {
-      console.log('Auth: Attempting login', { email });
+      console.log('Auth: Intentando iniciar sesión', { email });
+      
       try {
-        // Usar el cliente HTTP personalizado en lugar de axios
-        const { data } = await http.post('/api/auth/login', { email, password });
-        this.setToken(data.token, data.expiration);
-        console.log('Auth: Login successful');
-        router.push('/');
+        const response = await api.post('/auth/login', { email, password });
+        const { token, expiracion } = response.data;
+        
+        // Configurar token y esperar a que se complete
+        await this.setToken(token, expiracion);
+        console.log('Auth: Inicio de sesión exitoso');
+        
+        // Añadir un pequeño retraso para asegurar que todas las configuraciones se apliquen
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
         return true;
       } catch (error: any) {
-        console.error('Auth: Login failed', error?.response?.data || error?.message || error);
+        console.error('Auth: Error en inicio de sesión', error?.response?.data || error?.message || error);
         this.clearAuth();
         throw error;
       }
     },
-    setToken(token: string, expiration?: string) {
-      console.log('Auth: Setting token', { expiration });
+
+    async register(data: RegisterData) {
+      console.log('Auth: Intentando registrar nuevo usuario', { email: data.email });
+      
+      try {
+        const response = await api.post('/auth/registro', {
+          email: data.email,
+          password: data.password,
+          confirmPassword: data.confirmPassword
+        });
+        
+        console.log('Auth: Registro exitoso');
+        return response.data;
+      } catch (error: any) {
+        console.error('Auth: Error en registro', error?.response?.data || error?.message || error);
+        throw error;
+      }
+    },
+
+    async setToken(token: string, expiration?: string) {
+      console.log('Auth: Configurando token', { expiration });
+      
       this.token = token;
       localStorage.setItem('token', token);
       
-      // Set token expiration if provided
+      // Establecer expiración del token si se proporciona
       if (expiration) {
         this.tokenExpiration = new Date(expiration);
         localStorage.setItem('tokenExpiration', expiration);
       }
       
-      // Configurar token en axios global (para cualquier uso directo de axios)
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      
-      // Configurar token en cliente HTTP personalizado (redundante, ya que http lo obtiene de localStorage)
-      // http.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      // Esperar a que el localStorage se actualice
+      await new Promise(resolve => setTimeout(resolve, 100));
       
       this.isAuthenticated = true;
-      
-      console.log('Auth: Token configured in HTTP clients');
-      
-      // Setup interceptor to log requests with authorization
-      this.setupInterceptors();
+      console.log('Auth: Token configurado en cliente HTTP');
     },
+
     logout() {
-      console.log('Auth: Logging out');
+      console.log('Auth: Cerrando sesión');
       this.clearAuth();
       router.push('/login');
     },
+
     clearAuth() {
-      console.log('Auth: Clearing authentication');
+      console.log('Auth: Limpiando autenticación');
+      
       this.token = '';
       this.user = null;
       this.tokenExpiration = null;
+      
       localStorage.removeItem('token');
       localStorage.removeItem('tokenExpiration');
-      delete axios.defaults.headers.common['Authorization'];
+      
       this.isAuthenticated = false;
     },
+
     initialize() {
-      console.log('Auth: Initializing authentication state');
+      console.log('Auth: Inicializando estado de autenticación');
       
       const token = localStorage.getItem('token');
       const expiration = localStorage.getItem('tokenExpiration');
       
       if (token) {
-        console.log('Auth: Found stored token');
+        console.log('Auth: Token encontrado en almacenamiento');
+        
         if (expiration) {
           this.tokenExpiration = new Date(expiration);
-          // If token is expired, clear auth
+          
+          // Si el token está expirado, limpiar autenticación
           if (new Date() > this.tokenExpiration) {
-            console.log('Auth: Stored token is expired, clearing');
+            console.log('Auth: Token almacenado expirado, limpiando');
             this.clearAuth();
             return;
           }
         }
         
-        // Token valid, set up authentication
+        // Token válido, configurar autenticación
         this.setToken(token, expiration || undefined);
-        console.log('Auth: Restored authentication from storage');
+        console.log('Auth: Autenticación restaurada desde almacenamiento');
       } else {
-        console.log('Auth: No token in storage, user is not authenticated');
+        console.log('Auth: No hay token en almacenamiento, usuario no autenticado');
       }
-    },
-    setupInterceptors() {
-      // Add request interceptor
-      axios.interceptors.request.use(
-        config => {
-          // Log requests
-          console.log(`Auth: Request [${config.method?.toUpperCase()}] ${config.url}`, 
-                     { hasAuth: !!config.headers.Authorization });
-          return config;
-        },
-        error => {
-          console.error('Auth: Request error', error);
-          return Promise.reject(error);
-        }
-      );
-      
-      // Add response interceptor
-      axios.interceptors.response.use(
-        response => {
-          console.log(`Auth: Response [${response.status}] ${response.config.url}`);
-          return response;
-        },
-        error => {
-          if (error.response?.status === 401) {
-            console.error('Auth: 401 Unauthorized response');
-            // Only logout if we were previously authenticated
-            if (this.isAuthenticated) {
-              console.log('Auth: Logging out due to 401 response');
-              this.clearAuth();
-              router.push('/login');
-            }
-          }
-          return Promise.reject(error);
-        }
-      );
     }
   }
 });

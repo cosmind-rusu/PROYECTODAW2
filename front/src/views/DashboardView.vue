@@ -1,369 +1,445 @@
+<template>
+  <div class="dashboard">
+    <header class="dashboard__header">
+      <h1 class="dashboard__title">Dashboard Clínica Veterinaria</h1>
+      <p class="dashboard__subtitle">Sistema de gestión veterinaria</p>
+    </header>
+
+    <!-- Tarjetas de estadísticas -->
+    <section class="dashboard__stats">
+      <div class="stat-card stat-card--especies">
+        <div class="stat-card__icon">🐾</div>
+        <div class="stat-card__content">
+          <h3 class="stat-card__title">Especies</h3>
+          <p class="stat-card__number">{{ stats.totalEspecies || 0 }}</p>
+        </div>
+      </div>
+
+      <div class="stat-card stat-card--tratamientos">
+        <div class="stat-card__icon">💉</div>
+        <div class="stat-card__content">
+          <h3 class="stat-card__title">Tratamientos</h3>
+          <p class="stat-card__number">{{ stats.totalTratamientos }}</p>
+        </div>
+      </div>
+
+      <div class="stat-card stat-card--consultas">
+        <div class="stat-card__icon">📋</div>
+        <div class="stat-card__content">
+          <h3 class="stat-card__title">Consultas</h3>
+          <p class="stat-card__number">{{ stats.totalConsultas }}</p>
+        </div>
+      </div>
+
+      <div class="stat-card stat-card--planes">
+        <div class="stat-card__icon">🏥</div>
+        <div class="stat-card__content">
+          <h3 class="stat-card__title">Planes de Salud</h3>
+          <p class="stat-card__number">{{ stats.totalPlanes }}</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Accesos rápidos a módulos -->
+    <section class="dashboard__shortcuts">
+      <h2 class="dashboard__section-title">Accesos Rápidos</h2>
+      <div class="shortcut-grid">
+        <router-link to="/especies" class="shortcut-card">
+          <div class="shortcut-card__icon">🐾</div>
+          <h3 class="shortcut-card__title">Especies</h3>
+          <p class="shortcut-card__description">Gestionar especies de animales</p>
+        </router-link>
+
+        <router-link to="/tratamientos" class="shortcut-card">
+          <div class="shortcut-card__icon">💉</div>
+          <h3 class="shortcut-card__title">Tratamientos</h3>
+          <p class="shortcut-card__description">Administrar tratamientos médicos</p>
+        </router-link>
+
+        <router-link to="/consultas" class="shortcut-card">
+          <div class="shortcut-card__icon">📋</div>
+          <h3 class="shortcut-card__title">Consultas</h3>
+          <p class="shortcut-card__description">Registrar y ver consultas veterinarias</p>
+        </router-link>
+
+        <router-link to="/planes" class="shortcut-card">
+          <div class="shortcut-card__icon">🏥</div>
+          <h3 class="shortcut-card__title">Planes de Salud</h3>
+          <p class="shortcut-card__description">Configurar planes de salud para mascotas</p>
+        </router-link>
+      </div>
+    </section>
+
+    <!-- Contenedores de datos recientes -->
+    <div class="dashboard__recent-data">
+      <!-- Especies recientes -->
+      <section class="dashboard__recent-data-section">
+        <EspeciesRecientes />
+      </section>
+      
+      <!-- Consultas recientes -->
+      <section class="dashboard__recent-data-section">
+        <h2 class="dashboard__section-title">Consultas Recientes</h2>
+        
+        <div v-if="loading" class="dashboard__loading">
+          Cargando consultas recientes...
+        </div>
+        
+        <div v-else-if="error" class="dashboard__error">
+          <p>{{ error }}</p>
+          <button @click="cargarDatos" class="btn btn--primary">Reintentar</button>
+        </div>
+        
+        <div v-else-if="consultasRecientes.length === 0" class="dashboard__empty">
+          <p>No hay consultas registradas aún.</p>
+          <router-link to="/consultas" class="btn btn--primary">Crear Consulta</router-link>
+        </div>
+        
+        <table v-else class="dashboard__table">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Mascota</th>
+              <th>Especie</th>
+              <th>Tratamiento</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="consulta in consultasRecientes" :key="consulta.id">
+              <td>{{ formatoFecha(consulta.fechaConsulta) }}</td>
+              <td>{{ consulta.nombreMascota }}</td>
+              <td>{{ consulta.nombreEspecieAnimal }}</td>
+              <td>{{ consulta.nombreTratamiento }}</td>
+              <td>
+                <router-link :to="`/consultas/${consulta.id}`" class="table-action">
+                  Ver Detalles
+                </router-link>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <div class="dashboard__more">
+          <router-link to="/consultas" class="btn btn--secondary">
+            Ver Todas las Consultas
+          </router-link>
+        </div>
+      </section>
+    </div>
+  </div>
+</template>
+
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useAuthStore } from '@/stores/auth'
-import { useDashboardStore } from '@/stores/dashboard'
-import apiService from '@/api/services'
+import { ref, onMounted } from 'vue';
+import axios from 'axios';
+import { useAuthStore } from '@/stores/auth';
+import EspeciesRecientes from '@/components/dashboard/EspeciesRecientes.vue';
 
-// Estado para el dashboard
+// Estado del componente
+const authStore = useAuthStore();
+const loading = ref(false);
+const error = ref('');
+const consultasRecientes = ref([]);
 const stats = ref({
-  totalPets: 0,
-  todayAppointments: 0,
-  pendingAppointments: 0,
-  treatments: 0
-})
+  totalEspecies: 0,
+  totalTratamientos: 0,
+  totalConsultas: 0,
+  totalPlanes: 0
+});
 
-const recentConsultations = ref([])
-const loading = ref(false)
-const error = ref(null)
-
-// Usar el store del dashboard
-const dashboardStore = useDashboardStore()
-const authStore = useAuthStore()
-
-// Cargar datos del dashboard
+// Ciclo de vida
 onMounted(async () => {
-  console.log('Dashboard: Component mounted, loading data')
-  await loadDashboardData()
-})
+  await cargarDatos();
+});
 
-// Cargar datos del dashboard
-async function loadDashboardData() {
-  loading.value = true
-  error.value = null
+// Métodos
+async function cargarDatos() {
+  loading.value = true;
+  error.value = '';
   
   try {
-    console.log('Dashboard: Starting data load with auth status:', authStore.isAuthenticated)
-    
-    // Usar nuestro servicio API personalizado
-    const consultations = await apiService.getConsultations()
-    
-    // Mostrar las últimas 5 consultas
-    recentConsultations.value = consultations.slice(0, 5)
-    
-    // Calculamos estadísticas básicas
-    stats.value = {
-      totalPets: consultations.length,
-      todayAppointments: consultations.filter((c: any) => {
-        const today = new Date().toISOString().split('T')[0]
-        return c.consultationDate?.startsWith(today) || false
-      }).length,
-      pendingAppointments: consultations.filter((c: any) => 
-        c.followUpDate && new Date(c.followUpDate) >= new Date()
-      ).length,
-      treatments: [...new Set(consultations.map((c: any) => c.treatmentId))].length
-    }
-    
-    console.log('Dashboard: Data loaded successfully')
-  } catch (err: any) {
-    console.error('Dashboard: Error loading data:', err)
-    error.value = err?.message || 'Error al cargar los datos'
+    await Promise.all([
+      cargarConsultasRecientes(),
+      cargarEstadisticas()
+    ]);
+  } catch (err) {
+    console.error('Error cargando datos del dashboard:', err);
+    error.value = 'No se pudieron cargar los datos. Por favor, inténtalo de nuevo.';
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 }
 
-// Registrar nueva especie animal
-const createAnimalSpecies = async () => {
-  const name = prompt('Animal Species Name? (e.g. Dog, Cat, Bird)')
-  if (!name) return
-  
+async function cargarConsultasRecientes() {
   try {
-    console.log('Dashboard: Creating new animal species:', name)
-    const result = await apiService.createAnimalSpecies({
-      name,
-      description: `Common ${name} species`,
-      careInstructions: 'Standard care instructions', 
-      isActive: true
-    })
-    alert(`Animal Species registered: ${name}`)
-    // Recargar datos del dashboard
-    await loadDashboardData()
-  } catch(err) {
-    console.error('Error creating animal species:', err)
-    alert(`Failed to add ${name}`)
+    const { data } = await axios.get('/api/consultas?limite=5', authStore.authHeader);
+    consultasRecientes.value = data;
+  } catch (error) {
+    console.error('Error cargando consultas recientes:', error);
+    throw error;
   }
 }
 
-// Registrar nueva consulta veterinaria
-const createConsultation = async () => {
-  const speciesId = prompt('Animal Species ID?')
-  if (!speciesId) return
-  
-  const petName = prompt('Pet Name?')
-  if (!petName) return
-  
-  const ownerName = prompt('Owner Name?')
-  if (!ownerName) return
-  
-  const contactInfo = prompt('Contact Information?')
-  if (!contactInfo) return
-  
-  const treatmentId = prompt('Treatment ID?')
-  if (!treatmentId) return
-  
-  const cost = prompt('Cost of consultation?')
-  if (!cost) return
-  
-  const description = prompt('Diagnosis/Description?') || ''
-  const date = prompt('Date (YYYY-MM-DD)?', new Date().toISOString().split('T')[0])
-  
+async function cargarEstadisticas() {
   try {
-    const config = useAuthStore().authHeader
-    const payload = { 
-      animalSpeciesId: Number(speciesId),
-      treatmentId: Number(treatmentId),
-      petName,
-      ownerName,
-      contactInfo,
-      cost: Number(cost),
-      description,
-      consultationDate: date,
-      treatmentNotes: '',
-      prescription: '',
-      isExpense: true // Para mantener compatibilidad
-    }
+    // Cargar conteo de especies
+    const resEspecies = await axios.get('/api/especies', authStore.authHeader);
+    stats.value.totalEspecies = resEspecies.data.length;
     
-    const { data } = await axios.post('/api/consultations', payload, config)
-    alert(`Consultation registered with ID: ${data.id}`)
-    await loadDashboardData() // Refrescar datos
-  } catch (err) {
-    console.error(err)
-    alert('Error registering consultation')
+    // Cargar conteo de tratamientos
+    const resTratamientos = await axios.get('/api/tratamientos', authStore.authHeader);
+    stats.value.totalTratamientos = resTratamientos.data.length;
+    
+    // Cargar conteo de consultas
+    const resConsultas = await axios.get('/api/consultas', authStore.authHeader);
+    stats.value.totalConsultas = resConsultas.data.length;
+    
+    // Cargar conteo de planes de salud
+    const resPlanes = await axios.get('/api/planes', authStore.authHeader);
+    stats.value.totalPlanes = resPlanes.data.length;
+  } catch (error) {
+    console.error('Error cargando estadísticas:', error);
+    throw error;
   }
 }
 
-// Registrar un nuevo tratamiento
-const createTreatment = async () => {
-  const name = prompt('Treatment Name?')
-  if (!name) return
-  
-  const description = prompt('Treatment Description?')
-  if (!description) return
-  
-  const cost = prompt('Default Cost?', '0')
-  
-  try {
-    const config = useAuthStore().authHeader
-    const payload = { 
-      name, 
-      description,
-      defaultCost: Number(cost),
-      isActive: true,
-      isExpense: true // Para mantener compatibilidad
-    }
-    
-    const { data } = await axios.post('/api/treatments', payload, config)
-    alert(`Treatment registered: ${data.name}`)
-  } catch (err) {
-    console.error(err)
-    alert('Error registering treatment')
-  }
+function formatoFecha(fecha: string): string {
+  return new Date(fecha).toLocaleDateString('es-ES', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
 }
 </script>
 
-<template>
-  <main class="dashboard">
-    <h1>Veterinary Clinic Dashboard</h1>
-    
-    <!-- Estadísticas generales -->
-    <div class="stats-container">
-      <div class="stat-card">
-        <div class="stat-number">{{ stats.totalPets }}</div>
-        <div class="stat-label">Total Pets</div>
-      </div>
-      
-      <div class="stat-card">
-        <div class="stat-number">{{ stats.todayAppointments }}</div>
-        <div class="stat-label">Today's Appointments</div>
-      </div>
-      
-      <div class="stat-card">
-        <div class="stat-number">{{ stats.pendingAppointments }}</div>
-        <div class="stat-label">Pending Follow-ups</div>
-      </div>
-      
-      <div class="stat-card">
-        <div class="stat-number">{{ stats.treatments }}</div>
-        <div class="stat-label">Available Treatments</div>
-      </div>
-    </div>
-    
-    <div class="dashboard-content">
-      <!-- Sección de navegación rápida -->
-      <div class="quick-links">
-        <h2>Clinic Management</h2>
-        <router-link class="dashboard__btn" to="/categories">Animal Species</router-link>
-        <router-link class="dashboard__btn" to="/consultations">Consultations</router-link>
-        <router-link class="dashboard__btn" to="/treatments">Treatments</router-link>
-        <router-link class="dashboard__btn" to="/healthplans">Health Plans</router-link>
-      </div>
-      
-      <!-- Sección de acciones rápidas -->
-      <div class="quick-actions">
-        <h2>Quick Actions</h2>
-        <button class="dashboard__btn primary" @click="createConsultation">New Consultation</button>
-        <button class="dashboard__btn" @click="createAnimalSpecies">New Animal Species</button>
-        <button class="dashboard__btn" @click="createTreatment">New Treatment</button>
-      </div>
-    </div>
-    
-    <!-- Lista de consultas recientes -->
-    <div class="recent-appointments">
-      <h2>Recent Consultations</h2>
-      <div v-if="recentConsultations.length === 0" class="empty-state">
-        No consultations recorded yet
-      </div>
-      <table v-else>
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Pet</th>
-            <th>Owner</th>
-            <th>Diagnosis</th>
-            <th>Treatment</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="consultation in recentConsultations" :key="consultation.id">
-            <td>{{ new Date(consultation.consultationDate).toLocaleDateString() }}</td>
-            <td>{{ consultation.petName }}</td>
-            <td>{{ consultation.ownerName }}</td>
-            <td>{{ consultation.description }}</td>
-            <td>{{ consultation.treatmentName || 'Unknown' }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </main>
-</template>
-
-<style scoped lang="scss">
-@use "@/assets/styles/variables" as *;
-@use "@/assets/styles/mixins" as *;
+<style lang="scss" scoped>
+@import '@/assets/styles/variables';
+@import '@/assets/styles/mixins';
 
 .dashboard {
-  padding: $spacing-unit * 1.5;
-  max-width: 1200px;
-  margin: 0 auto;
+  &__header {
+    margin-bottom: $spacing-unit * 2;
+    text-align: center;
+  }
   
-  h1 {
-    color: $primary-color;
-    margin-bottom: $spacing-unit * 1.5;
+  &__title {
     font-size: 2rem;
+    color: $primary-color;
+    margin-bottom: $spacing-unit / 2;
   }
   
-  h2 {
+  &__subtitle {
+    font-size: 1.2rem;
     color: $secondary-color;
-    margin-bottom: $spacing-unit;
-    font-size: 1.3rem;
+    opacity: 0.8;
   }
   
-  // Contenedor de estadísticas
-  .stats-container {
-    display: flex;
-    justify-content: space-between;
+  &__stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: $spacing-unit;
     margin-bottom: $spacing-unit * 2;
-    
-    .stat-card {
-      flex: 1;
-      background-color: white;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      padding: $spacing-unit;
-      text-align: center;
-      
-      .stat-number {
-        font-size: 2rem;
-        font-weight: bold;
-        color: $primary-color;
-      }
-      
-      .stat-label {
-        font-size: 0.9rem;
-        color: #666;
-        margin-top: $spacing-unit / 2;
-      }
-    }
   }
   
-  // Layout de contenido
-  .dashboard-content {
-    display: flex;
+  &__section-title {
+    font-size: 1.5rem;
+    margin-bottom: $spacing-unit;
+    color: $secondary-color;
+    border-bottom: 2px solid $primary-color;
+    padding-bottom: $spacing-unit / 2;
+  }
+  
+  &__shortcuts {
+    margin-bottom: $spacing-unit * 2;
+  }
+  
+  &__recent-data {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
     gap: $spacing-unit * 2;
     margin-bottom: $spacing-unit * 2;
-    
-    .quick-links,
-    .quick-actions {
-      flex: 1;
-      background-color: white;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      padding: $spacing-unit;
-    }
   }
   
-  // Lista de consultas recientes
-  .recent-appointments {
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  &__recent-data-section {
+    @include card;
     padding: $spacing-unit;
+  }
+  
+  &__loading, &__error, &__empty {
+    padding: $spacing-unit * 2;
+    text-align: center;
+    margin-bottom: $spacing-unit;
+  }
+  
+  &__error {
+    color: $danger-color;
+  }
+  
+  &__table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: $light-color;
+    border-radius: $border-radius;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      
-      th, td {
-        padding: $spacing-unit / 2;
-        text-align: left;
-        border-bottom: 1px solid #eee;
-      }
-      
-      th {
-        color: $secondary-color;
-        font-weight: bold;
-      }
-      
-      tr:hover td {
-        background-color: #f9f9f9;
-      }
+    th, td {
+      padding: $spacing-unit;
+      text-align: left;
     }
     
-    .empty-state {
-      padding: $spacing-unit;
-      color: #666;
-      font-style: italic;
-      text-align: center;
+    th {
+      background-color: $secondary-color;
+      color: $light-color;
+      font-weight: bold;
+    }
+    
+    tr:nth-child(even) {
+      background-color: rgba($border-color, 0.2);
+    }
+    
+    tr:hover {
+      background-color: rgba($primary-color, 0.1);
     }
   }
   
-  // Botones
-  &__btn {
-    display: block;
-    width: 100%;
-    margin-bottom: $spacing-unit / 2;
-    padding: ($spacing-unit / 2) $spacing-unit;
-    background-color: $primary-color;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    text-align: center;
+  &__more {
+    margin-top: $spacing-unit;
+    text-align: right;
+  }
+}
+
+// Estilos para tarjetas de estadísticas
+.stat-card {
+  @include card;
+  display: flex;
+  align-items: center;
+  padding: $spacing-unit;
+  
+  &__icon {
+    font-size: 2rem;
+    margin-right: $spacing-unit;
+  }
+  
+  &__content {
+    flex: 1;
+  }
+  
+  &__title {
+    font-size: 1rem;
+    margin: 0 0 $spacing-unit / 4 0;
+    color: $text-color;
+  }
+  
+  &__number {
+    font-size: 1.8rem;
+    font-weight: bold;
+    margin: 0;
+    color: $primary-color;
+  }
+  
+  // Variantes
+  &--especies {
+    border-left: 4px solid $primary-color;
+  }
+  
+  &--tratamientos {
+    border-left: 4px solid $info-color;
+  }
+  
+  &--consultas {
+    border-left: 4px solid $warning-color;
+  }
+  
+  &--planes {
+    border-left: 4px solid $success-color;
+  }
+}
+
+// Estilos para accesos rápidos
+.shortcut-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: $spacing-unit;
+}
+
+.shortcut-card {
+  @include card;
+  display: block;
+  padding: $spacing-unit * 1.5;
+  text-align: center;
+  text-decoration: none;
+  color: $text-color;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     text-decoration: none;
-    transition: background-color 0.2s ease;
-    
-    &:hover {
-      background-color: darken($primary-color, 5%);
+  }
+  
+  &__icon {
+    font-size: 2.5rem;
+    margin-bottom: $spacing-unit;
+  }
+  
+  &__title {
+    font-size: 1.2rem;
+    margin-bottom: $spacing-unit / 2;
+    color: $primary-color;
+  }
+  
+  &__description {
+    font-size: 0.9rem;
+    color: $text-color;
+    opacity: 0.8;
+  }
+}
+
+// Estilos para acciones en tabla
+.table-action {
+  color: $primary-color;
+  text-decoration: none;
+  font-weight: 500;
+  
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+// Estilos para botones
+.btn {
+  @include button;
+  margin-left: $spacing-unit / 2;
+  
+  &--primary {
+    @include button($bg: $primary-color);
+  }
+  
+  &--secondary {
+    @include button($bg: $secondary-color);
+  }
+}
+
+// Responsive
+@media (max-width: $breakpoint-md) {
+  .dashboard {
+    &__stats {
+      grid-template-columns: repeat(2, 1fr);
     }
     
-    &.primary {
-      background-color: $secondary-color;
-      font-weight: bold;
-      
-      &:hover {
-        background-color: darken($secondary-color, 5%);
-      }
+    &__table {
+      display: block;
+      overflow-x: auto;
+    }
+  }
+}
+
+@media (max-width: $breakpoint-sm) {
+  .dashboard {
+    &__stats {
+      grid-template-columns: 1fr;
     }
   }
 }

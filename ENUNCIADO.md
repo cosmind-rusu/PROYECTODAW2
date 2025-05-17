@@ -63,3 +63,4 @@ Se desarrollará una aplicación web y una API que permitan gestionar informaci�
 
 ### 🌍 Inglés
 - **Traduce todos los textos** de la aplicación web al **inglés** para que se muestre completamente en inglés.
+

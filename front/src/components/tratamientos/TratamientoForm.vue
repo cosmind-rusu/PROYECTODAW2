@@ -1,37 +1,28 @@
 <template>
-  <div class="tratamiento-form">
-    <div class="tratamiento-form__header">
-      <h2 class="tratamiento-form__title">Nuevo Tratamiento</h2>
-      <button @click="cerrar" class="tratamiento-form__close">×</button>
+  <div class="tratamiento-form card">
+    <div class="card-header">
+      <h2>{{ props.mode === 'edit' ? 'Editar Tratamiento' : 'Nuevo Tratamiento' }}</h2>
+      <button class="card-close" @click="cerrar">×</button>
     </div>
-    <form @submit.prevent="guardar" class="tratamiento-form__body">
-      <div class="tratamiento-form__grid">
-        <!-- Campos en grid -->
-        <div class="form-group">
-          <label for="nombre">Nombre</label>
-          <input id="nombre" v-model="dto.nombre" type="text" required placeholder="Ej: Vacunación" />
-        </div>
-        <div class="form-group">
-          <label for="descripcion">Descripción</label>
-          <textarea id="descripcion" v-model="dto.descripcion" required placeholder="Detalle del tratamiento" class="form-group--wide"></textarea>
-        </div>
-        <div class="form-group">
-          <label for="costoEstandar">Costo Estándar</label>
-          <input id="costoEstandar" v-model.number="dto.costoEstandar" type="number" min="0" required placeholder="0.00" />
-        </div>
-        <div class="form-group">
-          <label for="duracionEstimadaMinutos">Duración (min)</label>
-          <input id="duracionEstimadaMinutos" v-model.number="dto.duracionEstimadaMinutos" type="number" min="1" required placeholder="30" />
-        </div>
-        <div class="form-group">
-          <label for="activo">Activo</label>
-          <input id="activo" v-model="dto.activo" type="checkbox" />
-        </div>
+    <form @submit.prevent="guardar" class="card-body">
+      <div class="form-group">
+        <label for="nombre">Nombre</label>
+        <input id="nombre" v-model="dto.nombre" type="text" placeholder="Nombre del tratamiento" required />
       </div>
-      <!-- Acciones -->
+      <div class="form-group">
+        <label for="descripcion">Descripción</label>
+        <textarea id="descripcion" v-model="dto.descripcion" placeholder="Descripción del tratamiento" required></textarea>
+      </div>
+      <div class="form-group inline">
+        <label for="costo">Costo Estándar</label>
+        <input id="costo" v-model.number="dto.costoEstandar" type="number" min="0" placeholder="0.00" required />
+      </div>
+      <div class="form-group inline">
+        <label><input type="checkbox" v-model="dto.activo" /> Activo</label>
+      </div>
       <div class="form-actions">
-        <button type="button" @click="cerrar" class="btn btn--secondary">Cancelar</button>
-        <button type="submit" :disabled="loading" class="btn btn--primary">{{ loading ? 'Guardando...' : 'Guardar' }}</button>
+        <button type="button" @click="cerrar" class="btn btn-secondary">Cancelar</button>
+        <button type="submit" :disabled="loading" class="btn btn-primary">{{ loading ? (props.mode === 'edit' ? 'Actualizando...' : 'Guardando...') : (props.mode === 'edit' ? 'Actualizar' : 'Guardar') }}</button>
       </div>
       <p v-if="error" class="error">{{ error }}</p>
     </form>
@@ -39,9 +30,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted, defineProps } from 'vue';
 import { useTratamientosStore } from '@/stores/tratamientos';
 import type { TratamientoDto } from '@/types/tratamientos';
+
+// Aceptamos una prop 'mode' para distinguir entre creación y edición
+const props = defineProps({
+  mode: { type: String, default: 'create' },
+  dto: { type: Object as () => TratamientoDto, default: () => ({
+    nombre: '',
+    descripcion: '',
+    costoEstandar: 0,
+    activo: true
+  }) }
+});
 
 const emit = defineEmits(['cerrar','guardado']);
 const store = useTratamientosStore();
@@ -49,23 +51,24 @@ const store = useTratamientosStore();
 const loading = ref(false);
 const error = ref('');
 
-const dto = ref<TratamientoDto>({
-  nombre: '',
-  descripcion: '',
-  costoEstandar: 0,
-  duracionEstimadaMinutos: 1,
-  activo: true
-});
+// Si estamos en modo edición, usamos el objeto recibido en props; caso contrario, iniciamos uno nuevo.
+const dto = ref<TratamientoDto>(props.dto);
 
 async function guardar() {
   loading.value = true;
   error.value = '';
   try {
-    await store.crearTratamiento(dto.value);
+    if (props.mode === 'edit') {
+      // Actualización: se asume que dto.id existe
+      await store.actualizarTratamiento(dto.value.id!, dto.value);
+    } else {
+      // Creación
+      await store.crearTratamiento(dto.value);
+    }
     emit('guardado');
     cerrar();
-  } catch (err: any) {
-    error.value = err.response?.data?.mensaje || 'Error al crear tratamiento';
+  } catch (e: any) {
+    error.value = e.response?.data?.mensaje || (props.mode === 'edit' ? 'Error actualizando tratamiento' : 'Error creando tratamiento');
   } finally {
     loading.value = false;
   }
@@ -77,24 +80,104 @@ function cerrar() {
 </script>
 
 <style scoped>
-/* Contenedor */
-.tratamiento-form { max-width: 600px; margin: auto; background: #fff; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-.tratamiento-form__header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
-.tratamiento-form__close { background: none; border: none; font-size: 1.5rem; cursor: pointer; }
-/* Grid de campos */
-.tratamiento-form__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); gap: 1rem; }
-.form-group { display: flex; flex-direction: column; }
-.form-group--wide { grid-column: span 2; }
-.form-group label { margin-bottom: 0.5rem; font-weight: 500; }
-/* Botones */
-.btn { padding: 0.5rem 1rem; border: none; border-radius: 4px; font-weight: 500; cursor: pointer; }
-.btn--primary { background: #007bff; color: #fff; }
-.btn--secondary { background: #6c757d; color: #fff; }
-/* Form actions */
-.form-actions { display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1rem; }
-/* Errores */
-.error { color: #c00; font-size: 0.875rem; margin-top: 0.25rem; }
+.card {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+  padding: 1.5rem;
+  max-width: 500px;
+  margin: auto;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.card-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.card-close {
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group.inline {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-weight: 500;
+  margin-bottom: 0.3rem;
+}
+
+input[type="text"], input[type="number"], textarea {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: #007bff;
+  color: #fff;
+}
+
+.btn-secondary {
+  background: #6c757d;
+  color: #fff;
+}
+
+.error {
+  color: #c00;
+  font-size: 0.9rem;
+}
+
 @media (max-width: 600px) {
-  .form-group--wide { grid-column: span 1; }
+  .card {
+    padding: 1rem;
+    margin: 0 1rem;
+  }
+  .form-group.inline {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 </style>

@@ -45,10 +45,18 @@
             <td>{{ t.activo ? 'Sí' : 'No' }}</td>
             <td>
               <button @click="onEliminar(t.id)" class="btn btn--danger">Eliminar</button>
+              <button @click="onEditar(t.id)" class="btn btn--primary">Editar</button>
             </td>
           </tr>
         </tbody>
       </table>
+    </div>
+    
+    <!-- Modal para edición de tratamiento -->
+    <div v-if="editingTratamiento" class="modal-overlay">
+      <div class="modal-content">
+        <TratamientoForm :dto="editingTratamiento" mode="edit" @cerrar="closeModal" @guardado="onEditGuardado"/>
+      </div>
     </div>
   </div>
 </template>
@@ -58,8 +66,18 @@ import { ref, onMounted } from 'vue';
 import { useTratamientosStore } from '@/stores/tratamientos';
 import TratamientoForm from '@/components/tratamientos/TratamientoForm.vue';
 
+interface TratamientoDto {
+  id?: number;
+  nombre: string;
+  descripcion: string;
+  costoEstandar: number;
+  activo: boolean;
+  // Otros campos que sean necesarios
+}
+
 const store = useTratamientosStore();
 const mostrarFormulario = ref(false);
+const editingTratamiento = ref<TratamientoDto | null>(null);
 
 const cargar = async () => {
   try { await store.obtenerTratamientos(); }
@@ -82,6 +100,27 @@ async function onEliminar(id: number) {
   } catch (err) {
     console.error('Error al eliminar tratamiento:', err);
   }
+}
+
+// Función para editar: se muestra el modal con el tratamiento seleccionado
+async function onEditar(id: number) {
+  // Buscar en la lista por id (podrías también hacer una llamada API para obtener detalles)
+  const tratamiento = store.tratamientos.find(t => t.id === id);
+  if (tratamiento) {
+    // Clonar el objeto para evitar mutaciones directas
+    editingTratamiento.value = { ...tratamiento };
+  }
+}
+
+// Se cierra el modal
+function closeModal() {
+  editingTratamiento.value = null;
+}
+
+// Cuando se guarda la edición, se refresca la lista y se cierra el modal
+async function onEditGuardado() {
+  await cargar();
+  closeModal();
 }
 </script>
 
@@ -149,4 +188,24 @@ async function onEliminar(id: number) {
 .error p { color: $danger-color; }
 
 .btn--primary { @include button($bg: $primary-color); }
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.modal-content {
+  background: #fff;
+  border-radius: 8px;
+  padding: 1.5rem;
+  max-width: 600px;
+  width: 90%;
+}
 </style>

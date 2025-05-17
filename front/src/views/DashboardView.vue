@@ -102,7 +102,6 @@
               <th>Mascota</th>
               <th>Especie</th>
               <th>Tratamiento</th>
-              <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -111,11 +110,6 @@
               <td>{{ consulta.nombreMascota }}</td>
               <td>{{ consulta.nombreEspecieAnimal }}</td>
               <td>{{ consulta.nombreTratamiento }}</td>
-              <td>
-                <router-link :to="`/consultas/${consulta.id}`" class="table-action">
-                  Ver Detalles
-                </router-link>
-              </td>
             </tr>
           </tbody>
         </table>
@@ -249,8 +243,28 @@ function formatoFecha(fecha: string): string {
   }
   
   &__recent-data-section {
-    @include card;
-    padding: $spacing-unit;
+    background-color: #fff;
+    padding: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+  }
+  
+  &__recent-data-section h2 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  &__recent-data-section table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  &__recent-data-section table th,
+  &__recent-data-section table td {
+    padding: 0.5rem;
+    text-align: left;
+    border-bottom: 1px solid #eee;
   }
   
   &__loading, &__error, &__empty {
@@ -428,6 +442,28 @@ function formatoFecha(fecha: string): string {
     &__stats {
       grid-template-columns: 1fr;
     }
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard__recent-data .dashboard__table {
+    font-size: 0.8rem;
+    overflow-x: auto;
+    display: block;
+  }
+  .dashboard__recent-data {
+    padding: 0 1rem;
+  }
+  .dashboard__recent-data-section {
+    padding: 0.5rem;
+  }
+  .dashboard__recent-data-section h2 {
+    font-size: 1.2rem;
+  }
+  .dashboard__recent-data-section table th,
+  .dashboard__recent-data-section table td {
+    padding: 0.3rem;
+    font-size: 0.8rem;
   }
 }
 </style>

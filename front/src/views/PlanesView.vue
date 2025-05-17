@@ -28,11 +28,10 @@
           <tr>
             <th>Nombre</th>
             <th>Tratamiento</th>
+            <th>Descripción</th>
             <th>Costo</th>
             <th>Duración</th>
             <th>Visitas</th>
-            <th>Emergencias</th>
-            <th>%Desc</th>
             <th>Activo</th>
             <th>Acciones</th>
           </tr>
@@ -41,11 +40,10 @@
           <tr v-for="p in store.planes" :key="p.id">
             <td>{{ p.nombre }}</td>
             <td>{{ p.nombreTratamiento }}</td>
+            <td>{{ p.descripcion }}</td>
             <td>{{ p.costo }}</td>
             <td>{{ p.duracionMeses }} m</td>
             <td>{{ p.visitasIncluidas }}</td>
-            <td>{{ p.incluyeEmergencias ? 'Sí' : 'No' }}</td>
-            <td>{{ p.porcentajeDescuento }}%</td>
             <td>{{ p.activo ? 'Sí' : 'No' }}</td>
             <td>
               <button @click="onEliminar(p.id)" class="btn btn--danger">Eliminar</button>

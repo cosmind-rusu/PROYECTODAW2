@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using DotNetEnv;
 using back.Middleware;
+using back.Models;
 
 // Cargar variables de entorno desde .env
 Env.Load();
@@ -121,6 +122,7 @@ using (var scope = app.Services.CreateScope())
 
     // Crear usuario administrador si no existe
     await InitializeAdminUser(app);
+    await InitializeSampleData(app);
 }
 
 // Configurar pipeline HTTP
@@ -173,4 +175,56 @@ static async Task InitializeAdminUser(WebApplication app)
     {
         Console.WriteLine("ℹ️ Usuario administrador ya existe");
     }
+}
+
+async Task InitializeSampleData(WebApplication app)
+{
+    using var scope = app.Services.CreateScope();
+    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+    if (!context.EspeciesAnimales.Any())
+    {
+        context.EspeciesAnimales.AddRange(new List<EspecieAnimal>
+        {
+            new EspecieAnimal
+            {
+                Nombre = "Perro",
+                Descripcion = "Especie canina",
+                Activo = true,
+                FechaCreacion = DateTime.UtcNow
+            },
+            new EspecieAnimal
+            {
+                Nombre = "Gato",
+                Descripcion = "Especie felina",
+                Activo = true,
+                FechaCreacion = DateTime.UtcNow
+            }
+        });
+    }
+
+    if (!context.Tratamientos.Any())
+    {
+        context.Tratamientos.AddRange(new List<Tratamiento>
+        {
+            new Tratamiento
+            {
+                Nombre = "Vacuna antirrábica",
+                Descripcion = "Vacunación para el control de la rabia",
+                Activo = true,
+                CostoEstandar = 50,
+                FechaCreacion = DateTime.UtcNow
+            },
+            new Tratamiento
+            {
+                Nombre = "Control de pulgas",
+                Descripcion = "Tratamiento antipulgas",
+                Activo = true,
+                CostoEstandar = 30,
+                FechaCreacion = DateTime.UtcNow
+            }
+        });
+    }
+
+    await context.SaveChangesAsync();
 }

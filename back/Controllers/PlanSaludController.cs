@@ -104,6 +104,10 @@ namespace back.Controllers
             var plan = _mapper.Map<PlanSalud>(dto);
             var usuarioId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             plan.UsuarioId = usuarioId;
+            
+            plan.FechaInicio = DateTime.SpecifyKind(plan.FechaInicio, DateTimeKind.Utc);
+            plan.FechaFin = DateTime.SpecifyKind(plan.FechaFin, DateTimeKind.Utc);
+
             _context.PlanesSalud.Add(plan);
             try
             {
